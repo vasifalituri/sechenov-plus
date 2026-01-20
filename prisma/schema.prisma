@@ -50,17 +50,23 @@ enum StorageType {
 
 // Models
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  username      String?  @unique
-  password      String
-  fullName      String
-  academicYear  Int      // 1-6
-  profileImage  String?  // Path to profile image
-  status        UserStatus @default(PENDING)
-  role          UserRole   @default(USER)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  username              String?  @unique
+  password              String
+  fullName              String
+  academicYear          Int      // 1-6
+  profileImage          String?  // Path to profile image
+  status                UserStatus @default(PENDING)
+  role                  UserRole   @default(USER)
+  
+  // Email verification fields
+  emailVerified         Boolean    @default(false)
+  verificationCode      String?    // 6-digit code
+  verificationCodeExpiry DateTime? // Code expires in 15 minutes
+  
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
   // Relations
   uploadedMaterials     Material[]        @relation("MaterialUploader")

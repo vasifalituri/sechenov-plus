@@ -15,6 +15,8 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<'register' | 'verify'>('register');
+  const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -57,6 +59,7 @@ export function RegisterForm() {
     }
 
     try {
+      // Step 1: Register user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,16 +74,87 @@ export function RegisterForm() {
 
       const data = await response.json();
 
-      if (data.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push('/login');
-        }, 3000);
-      } else {
+      if (!data.success) {
         setError(data.error || 'Ошибка регистрации');
+        return;
       }
+
+      // Step 2: Send verification code
+      const codeRes = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const codeData = await codeRes.json();
+
+      if (!codeRes.ok) {
+        setError(codeData.error || 'Не удалось отправить код');
+        return;
+      }
+
+      // Move to verification step
+      setStep('verify');
+      setError('');
     } catch (err) {
       setError('Произошла ошибка при регистрации');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          code: verificationCode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Неверный код');
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка проверки кода');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Не удалось отправить код');
+      }
+
+      alert('Новый код отправлен на ваш email!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка отправки кода');
     } finally {
       setIsLoading(false);
     }
@@ -90,10 +164,9 @@ export function RegisterForm() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-green-600">Заявка отправлена!</CardTitle>
+          <CardTitle className="text-2xl text-green-600">Email подтверждён! ✅</CardTitle>
           <CardDescription>
-            Ваша заявка успешно отправлена. Администратор рассмотрит её в ближайшее время.
-            Вы получите доступ после одобрения.
+            Ваш email успешно подтверждён. Теперь вы можете войти в систему.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,6 +174,69 @@ export function RegisterForm() {
             Перенаправление на страницу входа...
           </p>
         </CardContent>
+      </Card>
+    );
+  }
+
+  // Verification step
+  if (step === 'verify') {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Подтвердите email 📧</CardTitle>
+          <CardDescription>
+            Мы отправили 6-значный код на <strong>{formData.email}</strong>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleVerify} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="code">Код подтверждения</Label>
+              <Input
+                id="code"
+                type="text"
+                placeholder="123456"
+                maxLength={6}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                required
+                className="text-center text-2xl tracking-widest"
+              />
+              <p className="text-xs text-muted-foreground">
+                Код действителен 15 минут
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading || verificationCode.length !== 6}>
+              {isLoading ? 'Проверка...' : 'Подтвердить'}
+            </Button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isLoading}
+                className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+              >
+                Не получили код? Отправить снова
+              </button>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <button
+            onClick={() => setStep('register')}
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            ← Вернуться к регистрации
+          </button>
+        </CardFooter>
       </Card>
     );
   }
