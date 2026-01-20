@@ -127,6 +127,10 @@ export function MaterialUploadForm() {
   };
 
   const uploadToSupabase = async (file: File): Promise<{ url: string; path: string }> => {
+    if (!supabase) {
+      throw new Error('Supabase не настроен');
+    }
+    
     // Create unique file path
     const timestamp = Date.now();
     const userId = session?.user?.id || 'anonymous';
@@ -264,7 +268,7 @@ export function MaterialUploadForm() {
 
       if (!response.ok || !result.success) {
         // If API fails, try to clean up uploaded file (only for Supabase)
-        if (storageType === 'SUPABASE') {
+        if (storageType === 'SUPABASE' && supabase) {
           try {
             await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
           } catch (cleanupError) {
