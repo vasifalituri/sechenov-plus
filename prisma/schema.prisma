@@ -1,0 +1,326 @@
+// Prisma Schema for Medical Exam Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ContentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FileType {
+  PDF
+  DOCX
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+enum BookmarkType {
+  MATERIAL
+  DISCUSSION
+}
+
+enum StorageType {
+  SUPABASE      // Files stored in Supabase Storage
+  EXTERNAL_MEGA // Files stored in MEGA
+  LOCAL         // Legacy: files in local filesystem (for migration)
+}
+
+// Models
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String?  @unique
+  password      String
+  fullName      String
+  academicYear  Int      // 1-6
+  profileImage  String?  // Path to profile image
+  status        UserStatus @default(PENDING)
+  role          UserRole   @default(USER)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  uploadedMaterials     Material[]        @relation("MaterialUploader")
+  approvedMaterials     Material[]        @relation("MaterialApprover")
+  discussionThreads     DiscussionThread[] @relation("ThreadAuthor")
+  approvedThreads       DiscussionThread[] @relation("ThreadApprover")
+  comments              Comment[]          @relation("CommentAuthor")
+  approvedComments      Comment[]          @relation("CommentApprover")
+  votes                 Vote[]
+  sentMessages          Message[]          @relation("MessageSender")
+  receivedMessages      Message[]          @relation("MessageReceiver")
+  bookmarks             Bookmark[]
+  ratings               Rating[]
+  notifications         Notification[]     @relation("NotificationReceiver")
+  createdNotifications  Notification[]     @relation("NotificationCreator")
+  downloads             MaterialDownload[]
+
+  @@index([email])
+  @@index([username])
+  @@index([status])
+  @@map("users")
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  name        String   // e.g., "Анатомия"
+  slug        String   @unique // e.g., "anatomy"
+  description String?
+  order       Int      @default(0) // For sorting
+  createdAt   DateTime @default(now())
+
+  // Relations
+  materials         Material[]
+  discussionThreads DiscussionThread[]
+
+  @@index([slug])
+  @@map("subjects")
+}
+
+model Material {
+  id            String        @id @default(uuid())
+  title         String
+  description   String?
+  subjectId     String
+  academicYear  Int           // 1-6
+  filePath      String        // Storage path (Supabase path or external identifier)
+  fileName      String        // Original filename
+  fileType      FileType
+  fileSize      Int           // In bytes
+  storageType   StorageType   @default(SUPABASE) // Where file is stored
+  storageBucket String?       // Supabase bucket name (e.g., "materials")
+  externalUrl   String?       // Direct URL for external storage (MEGA, etc.)
+  tags          String[]      // ["high-yield", "exam-relevant"]
+  status        ContentStatus @default(PENDING)
+  uploadedById  String
+  approvedById  String?
+  downloadCount Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  subject      Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedBy   User       @relation("MaterialUploader", fields: [uploadedById], references: [id])
+  approvedBy   User?      @relation("MaterialApprover", fields: [approvedById], references: [id])
+  bookmarks    Bookmark[]
+  ratings      Rating[]
+  downloads    MaterialDownload[]
+
+  @@index([subjectId])
+  @@index([academicYear])
+  @@index([status])
+  @@index([createdAt])
+  @@map("materials")
+}
+
+// Track unique downloads per user
+model MaterialDownload {
+  id          String   @id @default(uuid())
+  materialId  String
+  userId      String
+  downloadedAt DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, userId]) // One record per user per material
+  @@index([materialId])
+  @@index([userId])
+  @@map("material_downloads")
+}
+
+model DiscussionThread {
+  id            String        @id @default(uuid())
+  title         String
+  content       String        @db.Text
+  subjectId     String
+  academicYear  Int           // 1-6
+  authorId      String
+  status        ContentStatus @default(PENDING)
+  approvedById  String?
+  upvotes       Int           @default(0)
+  downvotes     Int           @default(0)
+  commentsCount Int           @default(0)
+  isPinned      Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  subject    Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  author     User       @relation("ThreadAuthor", fields: [authorId], references: [id])
+  approvedBy User?      @relation("ThreadApprover", fields: [approvedById], references: [id])
+  comments   Comment[]
+  votes      Vote[]
+  bookmarks  Bookmark[]
+
+  @@index([subjectId])
+  @@index([academicYear])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+  @@map("discussion_threads")
+}
+
+model Comment {
+  id           String        @id @default(uuid())
+  content      String        @db.Text
+  threadId     String
+  parentId     String?       // For nested comments
+  authorId     String
+  status       ContentStatus @default(PENDING)
+  approvedById String?
+  upvotes      Int           @default(0)
+  downvotes    Int           @default(0)
+  depth        Int           @default(0) // 0 = top-level, 1 = reply, etc.
+  isPinned     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  thread     DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parent     Comment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[]        @relation("CommentReplies")
+  author     User             @relation("CommentAuthor", fields: [authorId], references: [id])
+  approvedBy User?            @relation("CommentApprover", fields: [approvedById], references: [id])
+  votes      Vote[]
+
+  @@index([threadId])
+  @@index([parentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+  @@map("comments")
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  userId    String
+  threadId  String?
+  commentId String?
+  type      VoteType // UPVOTE or DOWNVOTE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread  DiscussionThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  comment Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([threadId])
+  @@index([commentId])
+  @@map("votes")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+  senderId   String
+  receiverId String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Bookmark {
+  id             String       @id @default(uuid())
+  userId         String
+  type           BookmarkType
+  materialId     String?
+  discussionId   String?
+  note           String?      @db.Text // Optional note for the bookmark
+  createdAt      DateTime     @default(now())
+
+  // Relations
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material   Material?         @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  discussion DiscussionThread? @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+  @@unique([userId, discussionId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("bookmarks")
+}
+
+model Rating {
+  id         String   @id @default(uuid())
+  userId     String
+  materialId String
+  rating     Int      // 1-5 stars
+  review     String?  @db.Text // Optional text review
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId]) // User can only rate a material once
+  @@index([materialId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("ratings")
+}
+
+enum NotificationType {
+  MENTION           // Упомянули в комментарии
+  REPLY             // Ответили на комментарий
+  NEW_MESSAGE       // Новое личное сообщение
+  MATERIAL_RATED    // Оценили ваш материал
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           // Кому уведомление
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  link      String?          // Ссылка на источник уведомления
+  isRead    Boolean          @default(false)
+  createdById String?        // Кто создал уведомление (опционально)
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user      User  @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("NotificationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}

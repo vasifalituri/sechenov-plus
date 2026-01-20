@@ -1,0 +1,212 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatDate, formatFileSize, getStatusLabel, getStatusColor } from '@/lib/utils';
+import { Check, X, Trash2, Download } from 'lucide-react';
+
+export default function AdminMaterialsPage() {
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<string>('PENDING');
+
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
+
+  const fetchMaterials = async () => {
+    try {
+      const response = await fetch('/api/admin/materials');
+      const data = await response.json();
+      if (data.success) {
+        setMaterials(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching materials:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (materialId: string, status: string) => {
+    try {
+      const response = await fetch('/api/admin/materials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materialId, status }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchMaterials();
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Error updating material:', error);
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот материал?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/materials?materialId=${materialId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchMaterials();
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Error deleting material:', error);
+    }
+  };
+
+  const filteredMaterials = materials.filter((material) => {
+    if (filter === 'ALL') return true;
+    return material.status === filter;
+  });
+
+  const stats = {
+    all: materials.length,
+    pending: materials.filter((m) => m.status === 'PENDING').length,
+    approved: materials.filter((m) => m.status === 'APPROVED').length,
+    rejected: materials.filter((m) => m.status === 'REJECTED').length,
+  };
+
+  if (isLoading) {
+    return <div>Загрузка...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold">Модерация материалов</h2>
+        <p className="text-muted-foreground mt-2">
+          Проверяйте и одобряйте загруженные материалы
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="cursor-pointer" onClick={() => setFilter('ALL')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{stats.all}</div>
+            <p className="text-sm text-muted-foreground">Всего</p>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer" onClick={() => setFilter('PENDING')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <p className="text-sm text-muted-foreground">На модерации</p>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer" onClick={() => setFilter('APPROVED')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+            <p className="text-sm text-muted-foreground">Одобрено</p>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer" onClick={() => setFilter('REJECTED')}>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+            <p className="text-sm text-muted-foreground">Отклонено</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Materials Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Материалы</CardTitle>
+          <CardDescription>
+            Показано {filteredMaterials.length} из {materials.length}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {filteredMaterials.map((material) => (
+              <div
+                key={material.id}
+                className="flex items-start justify-between p-4 border rounded-lg"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary">{material.subject.name}</Badge>
+                    <Badge variant="outline">{material.academicYear} курс</Badge>
+                    <Badge variant="outline">{material.fileType}</Badge>
+                  </div>
+                  <h4 className="font-medium mb-1">{material.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {material.description || 'Без описания'}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>Загрузил: {material.uploadedBy.fullName}</span>
+                    <span>•</span>
+                    <span>Размер: {formatFileSize(material.fileSize)}</span>
+                    <span>•</span>
+                    <span>{formatDate(material.createdAt)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 ml-4">
+                  <Badge className={getStatusColor(material.status)}>
+                    {getStatusLabel(material.status)}
+                  </Badge>
+
+                  <a
+                    href={`/api/materials/download/${material.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button size="sm" variant="outline">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </a>
+
+                  {material.status === 'PENDING' && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateStatus(material.id, 'APPROVED')}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleUpdateStatus(material.id, 'REJECTED')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDeleteMaterial(material.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            {filteredMaterials.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                Материалов не найдено
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

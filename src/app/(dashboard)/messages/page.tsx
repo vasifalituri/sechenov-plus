@@ -1,0 +1,296 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Send, Mail, Loader2, Search } from 'lucide-react';
+import { formatDateTime } from '@/lib/utils';
+import Link from 'next/link';
+
+interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  receiverId: string;
+  isRead: boolean;
+  createdAt: string;
+  sender: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
+  receiver: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
+}
+
+interface Conversation {
+  userId: string;
+  username: string;
+  fullName: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
+}
+
+export default function MessagesPage() {
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const userParam = searchParams.get('user');
+
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string | null>(userParam);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchConversations();
+    
+    // Refresh unread count when visiting messages page
+    const refreshUnreadCount = () => {
+      window.dispatchEvent(new Event('refresh-unread-count'));
+    };
+    
+    // Refresh when leaving the page
+    return () => {
+      refreshUnreadCount();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchMessages(selectedUser);
+      // Refresh unread count after reading messages
+      setTimeout(() => {
+        window.dispatchEvent(new Event('refresh-unread-count'));
+      }, 1000);
+    }
+  }, [selectedUser]);
+
+  const fetchConversations = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/messages/conversations');
+      const data = await response.json();
+      if (data.success) {
+        setConversations(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMessages = async (username: string) => {
+    try {
+      const response = await fetch(`/api/messages?user=${username}`);
+      const data = await response.json();
+      if (data.success) {
+        setMessages(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedUser) return;
+
+    setIsSending(true);
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverUsername: selectedUser,
+          content: newMessage,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setNewMessage('');
+        fetchMessages(selectedUser);
+        fetchConversations();
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const filteredConversations = conversations.filter(
+    (conv) =>
+      conv.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="h-[calc(100vh-8rem)] flex gap-4">
+      {/* Conversations List */}
+      <Card className="w-80 flex flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="w-5 h-5" />
+            Сообщения
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden flex flex-col gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Conversations */}
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {searchQuery ? 'Ничего не найдено' : 'Нет сообщений'}
+              </div>
+            ) : (
+              filteredConversations.map((conv) => (
+                <button
+                  key={conv.userId}
+                  onClick={() => setSelectedUser(conv.username)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    selectedUser === conv.username
+                      ? 'bg-blue-100 dark:bg-blue-900/30'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <Link 
+                      href={`/users/${conv.username}`}
+                      className="font-medium text-sm hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      @{conv.username}
+                    </Link>
+                    {conv.unreadCount > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        {conv.unreadCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {conv.lastMessage}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatDateTime(conv.lastMessageTime)}
+                  </p>
+                </button>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Messages Area */}
+      <Card className="flex-1 flex flex-col">
+        {selectedUser ? (
+          <>
+            <CardHeader className="border-b">
+              <CardTitle className="flex items-center gap-2">
+                <Link href={`/users/${selectedUser}`} className="hover:underline">
+                  @{selectedUser}
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col p-4 gap-4">
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto space-y-3">
+                {messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                    Нет сообщений. Начните общение!
+                  </div>
+                ) : (
+                  messages.map((message) => {
+                    const isOwn = message.senderId === session?.user?.id;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            isOwn
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 dark:bg-gray-800'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isOwn ? 'text-blue-100' : 'text-muted-foreground'
+                            }`}
+                          >
+                            {formatDateTime(message.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Send Message */}
+              <div className="flex gap-2">
+                <Textarea
+                  placeholder="Напишите сообщение..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  disabled={isSending}
+                  rows={2}
+                  className="resize-none"
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={isSending || !newMessage.trim()}
+                  size="icon"
+                  className="h-auto"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </>
+        ) : (
+          <CardContent className="flex-1 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <Mail className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p>Выберите диалог или начните новый</p>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    </div>
+  );
+}
