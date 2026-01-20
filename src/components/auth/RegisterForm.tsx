@@ -79,7 +79,7 @@ export function RegisterForm() {
         return;
       }
 
-      // Step 2: Send verification code
+      // Step 2: Try to send verification code (optional - if email service is configured)
       const codeRes = await fetch('/api/auth/send-verification-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,14 +88,18 @@ export function RegisterForm() {
 
       const codeData = await codeRes.json();
 
-      if (!codeRes.ok) {
-        setError(codeData.error || 'Не удалось отправить код');
-        return;
+      // If email service is configured and code sent successfully, go to verification
+      if (codeRes.ok && codeData.success) {
+        setStep('verify');
+        setError('');
+      } else {
+        // Email service not configured or failed - show success message without verification
+        setSuccess(true);
+        setError('');
+        setTimeout(() => {
+          router.push('/login?message=registered');
+        }, 2000);
       }
-
-      // Move to verification step
-      setStep('verify');
-      setError('');
     } catch (err) {
       setError('Произошла ошибка при регистрации');
     } finally {
@@ -164,9 +168,14 @@ export function RegisterForm() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-green-600">Email подтверждён! ✅</CardTitle>
+          <CardTitle className="text-2xl text-green-600">
+            {step === 'verify' ? 'Email подтверждён! ✅' : 'Регистрация успешна! ✅'}
+          </CardTitle>
           <CardDescription>
-            Ваш email успешно подтверждён. Теперь вы можете войти в систему.
+            {step === 'verify' 
+              ? 'Ваш email успешно подтверждён. Теперь вы можете войти в систему.'
+              : 'Ваша заявка отправлена. Ожидайте одобрения администратора.'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>

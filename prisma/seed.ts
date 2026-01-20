@@ -14,11 +14,13 @@ async function main() {
     update: {},
     create: {
       email: 'admin@sechenov.plus',
+      username: 'admin',
       password: hashedPassword,
       fullName: 'Администратор',
       academicYear: 6,
       status: 'APPROVED',
       role: 'ADMIN',
+      emailVerified: true,
     },
   });
 

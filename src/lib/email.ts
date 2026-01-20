@@ -6,7 +6,15 @@
 import { Resend } from 'resend';
 import { logger } from './logger';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is provided
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+// Check if email service is configured
+export function isEmailServiceConfigured(): boolean {
+  return !!process.env.RESEND_API_KEY;
+}
 
 /**
  * Generate a 6-digit verification code
@@ -41,6 +49,15 @@ export async function sendVerificationEmail(
   fullName: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check if email service is configured
+    if (!resend) {
+      logger.warn('Email service not configured, skipping verification email');
+      return { 
+        success: false, 
+        error: 'Email service is not configured. Please contact administrator.' 
+      };
+    }
+
     logger.info('Sending verification email', { email, code });
 
     const { data, error } = await resend.emails.send({
@@ -115,6 +132,12 @@ export async function sendWelcomeEmail(
   fullName: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check if email service is configured
+    if (!resend) {
+      logger.warn('Email service not configured, skipping welcome email');
+      return { success: true }; // Don't fail if email service is not configured
+    }
+
     const { data, error } = await resend.emails.send({
       from: 'Sechenov Plus <onboarding@resend.dev>',
       to: email,
