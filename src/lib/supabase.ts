@@ -1,26 +1,31 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Check if Supabase is configured
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local');
-}
+// Lazy initialization to prevent crashes on import
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null = null;
 
 // Client-side Supabase client (uses anon key, safe for browser)
-// Use dummy values if not configured to prevent runtime errors
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-);
+export const supabase = (() => {
+  if (!_supabase && supabaseUrl && supabaseAnonKey) {
+    _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return _supabase;
+})();
 
 // Server-side Supabase client (uses service role key, more permissions)
-export const supabaseAdmin = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseServiceKey || supabaseAnonKey || 'placeholder-key'
-);
+export const supabaseAdmin = (() => {
+  if (!_supabaseAdmin && supabaseUrl && (supabaseServiceKey || supabaseAnonKey)) {
+    _supabaseAdmin = createClient(
+      supabaseUrl,
+      supabaseServiceKey || supabaseAnonKey!
+    );
+  }
+  return _supabaseAdmin;
+})();
 
 export const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'materials';
 export const PROFILES_BUCKET = process.env.SUPABASE_PROFILES_BUCKET || 'profiles';
@@ -38,7 +43,7 @@ export function isSupabaseConfigured(): boolean {
  * @returns Public URL or error
  */
 export async function uploadFileToSupabase(file: File, path: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     throw new Error('Supabase is not configured. Please check your environment variables.');
   }
   const { data, error } = await supabase.storage
@@ -67,6 +72,9 @@ export async function uploadFileToSupabase(file: File, path: string) {
  * Delete file from Supabase Storage (server-side only)
  */
 export async function deleteFileFromSupabase(path: string) {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase is not configured.');
+  }
   const { error } = await supabaseAdmin.storage
     .from(STORAGE_BUCKET)
     .remove([path]);
@@ -80,6 +88,9 @@ export async function deleteFileFromSupabase(path: string) {
  * Get signed URL for private files (if needed later)
  */
 export async function getSignedUrl(path: string, expiresIn = 3600, bucket: string = STORAGE_BUCKET) {
+  if (!supabase) {
+    throw new Error('Supabase is not configured.');
+  }
   const { data, error } = await supabase.storage
     .from(bucket)
     .createSignedUrl(path, expiresIn);
@@ -98,7 +109,7 @@ export async function getSignedUrl(path: string, expiresIn = 3600, bucket: strin
  * @returns Public URL or error
  */
 export async function uploadProfileImage(file: File, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabaseAdmin) {
     throw new Error('Supabase is not configured. Please check your environment variables.');
   }
 
@@ -145,6 +156,9 @@ export async function uploadProfileImage(file: File, userId: string) {
  * Delete profile image from Supabase Storage
  */
 export async function deleteProfileImage(path: string) {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase is not configured.');
+  }
   const { error } = await supabaseAdmin.storage
     .from(PROFILES_BUCKET)
     .remove([path]);

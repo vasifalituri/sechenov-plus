@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { supabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase';
+import { supabaseAdmin, STORAGE_BUCKET, isSupabaseConfigured } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -76,6 +76,11 @@ export async function GET(
     } else if (material.storageType === 'SUPABASE') {
       // Download from Supabase Storage
       try {
+        if (!isSupabaseConfigured() || !supabaseAdmin) {
+          logger.error('Supabase not configured, falling back to local storage');
+          throw new Error('Supabase not configured');
+        }
+        
         const bucket = material.storageBucket || STORAGE_BUCKET;
         const { data, error } = await supabaseAdmin.storage
           .from(bucket)
