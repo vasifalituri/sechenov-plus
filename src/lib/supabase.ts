@@ -33,7 +33,14 @@ export const MAX_SUPABASE_FILE_SIZE = parseInt(process.env.MAX_SUPABASE_FILE_SIZ
 
 // Helper to check if Supabase is configured
 export function isSupabaseConfigured(): boolean {
-  return !!(supabaseUrl && supabaseAnonKey);
+  // Safe check for both server and client
+  const url = typeof window !== 'undefined' 
+    ? process.env.NEXT_PUBLIC_SUPABASE_URL 
+    : supabaseUrl;
+  const key = typeof window !== 'undefined'
+    ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    : supabaseAnonKey;
+  return !!(url && key);
 }
 
 /**
