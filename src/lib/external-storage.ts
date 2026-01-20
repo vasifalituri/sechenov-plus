@@ -57,7 +57,7 @@ export async function uploadToMega(file: File, fileName: string): Promise<string
         logger.info('Found existing MEGA folder', { folderName: MEGA_FOLDER_NAME });
       } else {
         logger.info('Creating MEGA folder', { folderName: MEGA_FOLDER_NAME });
-        targetFolder = await storage.mkdir(MEGA_FOLDER_NAME, storage.root);
+        targetFolder = await storage.mkdir(MEGA_FOLDER_NAME);
         logger.info('Created MEGA folder', { folderName: MEGA_FOLDER_NAME });
       }
     }
