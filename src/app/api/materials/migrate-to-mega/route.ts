@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     }
 
     // Check if file is in Supabase
-    if (material.storageType !== 'SUPABASE' || !material.storagePath) {
+    if (material.storageType !== 'SUPABASE' || !material.filePath) {
       return NextResponse.json(
         { error: 'Material is not in Supabase storage' },
         { status: 400 }
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     logger.info('Starting migration to MEGA', {
       materialId: material.id,
       fileName: material.fileName,
-      storagePath: material.storagePath,
+      filePath: material.filePath,
     });
 
     // Download file from Supabase
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from(material.storageBucket || 'materials')
-      .download(material.storagePath);
+      .download(material.filePath);
 
     if (downloadError || !fileData) {
       logger.error('Failed to download from Supabase', downloadError);
@@ -111,12 +111,12 @@ export async function POST(req: Request) {
     try {
       const { error: deleteError } = await supabaseAdmin.storage
         .from(material.storageBucket || 'materials')
-        .remove([material.storagePath]);
+        .remove([material.filePath]);
 
       if (deleteError) {
         logger.warn('Failed to delete from Supabase (non-critical)', deleteError);
       } else {
-        logger.info('File deleted from Supabase', { storagePath: material.storagePath });
+        logger.info('File deleted from Supabase', { filePath: material.filePath });
       }
     } catch (deleteErr) {
       logger.warn('Error deleting from Supabase (non-critical)', deleteErr);
