@@ -103,7 +103,6 @@ export async function POST(req: Request) {
       data: {
         storageType: 'EXTERNAL_MEGA',
         externalUrl: megaUrl,
-        fileUrl: megaUrl, // Update main URL to MEGA
       },
     });
 
