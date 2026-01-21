@@ -111,7 +111,7 @@ export async function POST(req: Request) {
       }
 
       await resend.emails.send({
-        from: 'Sechenov+ <noreply@sechenov-plus.com>',
+        from: process.env.EMAIL_FROM || 'Sechenov+ <onboarding@resend.dev>',
         to: user.email,
         subject: 'Подтвердите email - Sechenov+',
         html: `

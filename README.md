@@ -99,6 +99,10 @@ cp .env.example .env.local
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/medical_exam_platform?schema=public"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-super-secret-key-change-this"
+
+# Resend (Email verification)
+RESEND_API_KEY="re_xxxxxxxxxxxx"
+EMAIL_FROM="Sechenov+ <onboarding@resend.dev>"
 ```
 
 ### Шаг 3: Инициализация базы данных

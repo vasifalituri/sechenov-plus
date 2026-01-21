@@ -147,6 +147,10 @@ MAX_SUPABASE_FILE_SIZE=104857600
 MEGA_EMAIL=your-mega-email@example.com
 MEGA_PASSWORD=your-mega-password
 MEGA_FOLDER_NAME=sechenov-plus-materials
+
+# Resend (Email verification)
+RESEND_API_KEY=re_xxxxxxxxxxxx
+EMAIL_FROM="Sechenov+ <onboarding@resend.dev>"
 ```
 
 ⚠️ **ВАЖНО**: 
@@ -343,6 +347,12 @@ MAX_SUPABASE_FILE_SIZE=104857600  # 100MB in bytes
 MEGA_EMAIL="your-mega-email@example.com"
 MEGA_PASSWORD="your-mega-password"
 MEGA_FOLDER_NAME="sechenov-plus-materials"
+
+# ===========================================
+# RESEND (Email verification)
+# ===========================================
+RESEND_API_KEY="re_xxxxxxxxxxxx"
+EMAIL_FROM="Sechenov+ <onboarding@resend.dev>"
 ```
 
 ### Как сгенерировать NEXTAUTH_SECRET
