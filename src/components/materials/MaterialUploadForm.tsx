@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubjectSelect } from '@/components/ui/subject-select';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -349,20 +350,22 @@ export function MaterialUploadForm() {
 
       <div>
         <Label htmlFor="academicYear">Курс *</Label>
-        <select
-          id="academicYear"
-          value={formData.academicYear}
-          onChange={(e) => setFormData({ ...formData, academicYear: parseInt(e.target.value) })}
-          className="w-full p-2 border rounded-md"
-          required
+        <Select
+          value={formData.academicYear.toString()}
+          onValueChange={(value) => setFormData({ ...formData, academicYear: parseInt(value) })}
           disabled={isUploading}
         >
-          {[1, 2, 3, 4, 5, 6].map((year) => (
-            <option key={year} value={year}>
-              {year} курс
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите курс" />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4, 5, 6].map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year} курс
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
