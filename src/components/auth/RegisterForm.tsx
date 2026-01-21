@@ -15,8 +15,6 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState<'register' | 'verify'>('register');
-  const [verificationCode, setVerificationCode] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -59,7 +57,6 @@ export function RegisterForm() {
     }
 
     try {
-      // Step 1: Register user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,86 +76,12 @@ export function RegisterForm() {
         return;
       }
 
-      // Step 2: Try to send verification code (optional - if email service is configured)
-      const codeRes = await fetch('/api/auth/send-verification-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email }),
-      });
-
-      const codeData = await codeRes.json();
-
-      // If email service is configured and code sent successfully, go to verification
-      if (codeRes.ok && codeData.success) {
-        setStep('verify');
-        setError('');
-      } else {
-        // Email service not configured or failed - show success message without verification
-        setSuccess(true);
-        setError('');
-        setTimeout(() => {
-          router.push('/login?message=registered');
-        }, 2000);
-      }
-    } catch (err) {
-      setError('Произошла ошибка при регистрации');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/auth/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          code: verificationCode,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Неверный код');
-      }
-
       setSuccess(true);
       setTimeout(() => {
-        router.push('/login');
+        router.push('/login?message=registered');
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка проверки кода');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/auth/send-verification-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Не удалось отправить код');
-      }
-
-      alert('Новый код отправлен на ваш email!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка отправки кода');
+      setError('Произошла ошибка при регистрации');
     } finally {
       setIsLoading(false);
     }
@@ -169,13 +92,10 @@ export function RegisterForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-green-600">
-            {step === 'verify' ? 'Email подтверждён! ✅' : 'Регистрация успешна! ✅'}
+            Регистрация успешна! ✅
           </CardTitle>
           <CardDescription>
-            {step === 'verify' 
-              ? 'Ваш email успешно подтверждён. Теперь вы можете войти в систему.'
-              : 'Ваша заявка отправлена. Ожидайте одобрения администратора.'
-            }
+            Ваша заявка отправлена. Ожидайте одобрения администратора.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -183,69 +103,6 @@ export function RegisterForm() {
             Перенаправление на страницу входа...
           </p>
         </CardContent>
-      </Card>
-    );
-  }
-
-  // Verification step
-  if (step === 'verify') {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Подтвердите email 📧</CardTitle>
-          <CardDescription>
-            Мы отправили 6-значный код на <strong>{formData.email}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleVerify} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="code">Код подтверждения</Label>
-              <Input
-                id="code"
-                type="text"
-                placeholder="123456"
-                maxLength={6}
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                required
-                className="text-center text-2xl tracking-widest"
-              />
-              <p className="text-xs text-muted-foreground">
-                Код действителен 15 минут
-              </p>
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading || verificationCode.length !== 6}>
-              {isLoading ? 'Проверка...' : 'Подтвердить'}
-            </Button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleResendCode}
-                disabled={isLoading}
-                className="text-sm text-blue-600 hover:underline disabled:opacity-50"
-              >
-                Не получили код? Отправить снова
-              </button>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <button
-            onClick={() => setStep('register')}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← Вернуться к регистрации
-          </button>
-        </CardFooter>
       </Card>
     );
   }

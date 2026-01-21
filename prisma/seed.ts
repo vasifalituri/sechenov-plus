@@ -20,7 +20,6 @@ async function main() {
       academicYear: 6,
       status: 'APPROVED',
       role: 'ADMIN',
-      emailVerified: true,
     },
   });
 

@@ -59,12 +59,6 @@ model User {
   profileImage          String?  // Path to profile image
   status                UserStatus @default(PENDING)
   role                  UserRole   @default(USER)
-  
-  // Email verification fields
-  emailVerified         Boolean    @default(false)
-  verificationCode      String?    // 6-digit code
-  verificationCodeExpiry DateTime? // Code expires in 15 minutes
-  
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
