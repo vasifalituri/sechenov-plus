@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { SubjectSelect } from '@/components/ui/subject-select';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_SUPABASE_SIZE = 0; // ALL materials go to MEGA (not Supabase)
+const MAX_SUPABASE_SIZE = 10 * 1024 * 1024; // Use Supabase for files up to 10MB (Vercel has 4.5MB payload limit)
 
 const ALLOWED_TYPES = [
   'application/pdf',
@@ -92,11 +92,11 @@ export function MaterialUploadForm() {
     setSelectedFile(file);
     setCompressionResult(null); // Reset compression when new file selected
     
-    // All materials go to MEGA
-    const needsExternalStorage = true; // Always use MEGA for materials
+    // Use Supabase for all files (MEGA upload blocked by Vercel 4.5MB limit)
+    const needsExternalStorage = false; // Use Supabase Storage instead of MEGA
     setWillUseExternalStorage(needsExternalStorage);
     
-    toast.success(`Файл выбран: ${file.name} (${formatFileSize(file.size)}) - будет загружен в MEGA`, { duration: 5000 });
+    toast.success(`Файл выбран: ${file.name} (${formatFileSize(file.size)}) - будет загружен в Supabase`, { duration: 5000 });
 
     // No compression for MEGA uploads
     // Files are uploaded as-is to MEGA
@@ -369,11 +369,12 @@ export function MaterialUploadForm() {
         <Label htmlFor="file">Файл (PDF или DOCX, до 10MB) *</Label>
         
         {/* Storage info */}
-        <div className="mb-2 p-2 bg-purple-50 border border-purple-200 rounded-md text-xs text-purple-800">
+        <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-800">
           <p className="font-medium mb-1">📦 Хранилище материалов:</p>
           <ul className="space-y-0.5 ml-4 list-disc">
-            <li>Все учебные материалы → MEGA Storage (20GB бесплатно)</li>
+            <li>Все учебные материалы → Supabase Storage (1GB бесплатно)</li>
             <li>Максимальный размер файла: 10MB</li>
+            <li>Загрузка напрямую с браузера (быстро и безопасно)</li>
           </ul>
         </div>
         
