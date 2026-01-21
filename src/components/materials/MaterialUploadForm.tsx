@@ -178,6 +178,13 @@ export function MaterialUploadForm() {
       body: formData,
     });
 
+    // Handle non-JSON responses (e.g., HTML error pages)
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Non-JSON response received:', await response.text());
+      throw new Error('Ошибка сервера. MEGA Storage не настроен или недоступен.');
+    }
+
     const result = await response.json();
 
     if (!response.ok || !result.success) {
