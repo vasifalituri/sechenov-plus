@@ -6,7 +6,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, MessageSquare, User, LogOut, LayoutDashboard, Mail, Bookmark } from 'lucide-react';
+import { BookOpen, MessageSquare, User, LogOut, LayoutDashboard, Mail, Bookmark, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';

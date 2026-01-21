@@ -142,11 +142,27 @@ export default function AdminMaterialsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Модерация материалов</h2>
-        <p className="text-muted-foreground mt-2">
-          Проверяйте и одобряйте загруженные материалы
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Модерация материалов</h2>
+          <p className="text-muted-foreground mt-2">
+            Проверяйте и одобряйте загруженные материалы
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchMaterials}
+            disabled={isLoading}
+            title="Обновить список"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
