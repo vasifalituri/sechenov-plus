@@ -139,9 +139,6 @@ export function GlobalSearch() {
       >
         <Search className="w-4 h-4" />
         <span className="hidden md:inline">Поиск...</span>
-        <kbd className="hidden md:inline-block px-2 py-0.5 text-xs bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded">
-          Ctrl+K
-        </kbd>
       </button>
     );
   }
