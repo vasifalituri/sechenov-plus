@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { rateLimit, createRateLimitResponse, getClientIdentifier } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const sendCodeSchema = z.object({
   email: z.string().email('Неверный формат email'),
@@ -74,6 +75,14 @@ export async function POST(req: Request) {
 
     // Send email with verification code
     try {
+      if (!resend) {
+        logger.error('Resend API key not configured');
+        return NextResponse.json(
+          { success: false, error: 'Email сервис временно недоступен. Обратитесь к администратору.' },
+          { status: 503 }
+        );
+      }
+
       await resend.emails.send({
         from: 'Sechenov+ <noreply@sechenov-plus.com>',
         to: user.email,

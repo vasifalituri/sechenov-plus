@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { rateLimit, createRateLimitResponse, getClientIdentifier } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Generate 6-digit code
 function generateVerificationCode(): string {
@@ -95,6 +96,20 @@ export async function POST(req: Request) {
 
     // Send verification email
     try {
+      if (!resend) {
+        logger.warn('Resend API key not configured, skipping verification email');
+        return NextResponse.json({
+          success: true,
+          message: 'Регистрация успешна! Email сервис временно недоступен.',
+          data: {
+            id: user.id,
+            email: user.email,
+            status: user.status,
+            emailVerified: false,
+          },
+        });
+      }
+
       await resend.emails.send({
         from: 'Sechenov+ <noreply@sechenov-plus.com>',
         to: user.email,
