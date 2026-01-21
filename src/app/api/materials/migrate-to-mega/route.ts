@@ -118,7 +118,7 @@ export async function POST(req: Request) {
         logger.info('File deleted from Supabase', { filePath: material.filePath });
       }
     } catch (deleteErr) {
-      logger.warn('Error deleting from Supabase (non-critical)', deleteErr);
+      logger.warn('Error deleting from Supabase (non-critical)', { error: deleteErr });
     }
 
     return NextResponse.json({
