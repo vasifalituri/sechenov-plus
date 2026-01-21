@@ -43,13 +43,9 @@ export function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 300);
 
-  // Keyboard shortcut to open search (Ctrl+K or Cmd+K)
+  // Keyboard shortcut for Escape only
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
       if (e.key === 'Escape') {
         setIsOpen(false);
       }

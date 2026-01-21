@@ -112,6 +112,19 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8">
+      {/* Global Search Bar */}
+      <Card className="p-6">
+        <div className="flex flex-col space-y-3">
+          <h2 className="text-xl font-semibold">🔍 Поиск по всему сайту</h2>
+          <p className="text-sm text-muted-foreground">
+            Найдите материалы, обсуждения или пользователей
+          </p>
+          <div className="w-full">
+            <GlobalSearch />
+          </div>
+        </div>
+      </Card>
+
       {/* Welcome Section with Background Image */}
       <div className="relative rounded-lg p-8 text-white shadow-lg overflow-hidden min-h-[200px]">
         {/* Background Image with Opacity */}
@@ -176,19 +189,6 @@ export default async function HomePage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Global Search Bar */}
-      <Card className="p-6">
-        <div className="flex flex-col space-y-3">
-          <h2 className="text-xl font-semibold">🔍 Поиск по всему сайту</h2>
-          <p className="text-sm text-muted-foreground">
-            Найдите материалы, обсуждения или пользователей
-          </p>
-          <div className="w-full">
-            <GlobalSearch />
-          </div>
-        </div>
-      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Discussions - Reddit style */}

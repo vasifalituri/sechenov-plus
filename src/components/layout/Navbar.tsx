@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { MobileMenu } from './MobileMenu';
-import { GlobalSearch } from './GlobalSearch';
 import { NotificationBell } from './NotificationBell';
 
 export function Navbar() {
@@ -68,7 +67,6 @@ export function Navbar() {
                 );
               })}
             </div>
-            <GlobalSearch />
           </div>
 
           {/* Desktop Actions */}
@@ -110,7 +108,6 @@ export function Navbar() {
 
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center space-x-2" suppressHydrationWarning>
-            <GlobalSearch />
             <NotificationBell />
             <ThemeToggle />
             <MobileMenu />
