@@ -1,32 +1,17 @@
+/**
+ * Script to update subjects in the database
+ * Run: npx ts-node scripts/update-subjects.ts
+ */
+
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Seeding database...');
+async function updateSubjects() {
+  console.log('🔄 Updating subjects in database...\n');
 
-  // Create default admin user
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@sechenov.plus' },
-    update: {},
-    create: {
-      email: 'admin@sechenov.plus',
-      username: 'admin',
-      password: hashedPassword,
-      fullName: 'Администратор',
-      academicYear: 6,
-      status: 'APPROVED',
-      role: 'ADMIN',
-    },
-  });
-
-  console.log('✅ Created admin user:', admin.email);
-
-  // Create subjects (Medical subjects in Russian - alphabetically sorted with "Другое" first)
-  const subjects = [
+  // New subjects list (alphabetically sorted with "Другое" first)
+  const newSubjects = [
     { name: 'Другое', slug: 'other', order: 1 },
     { name: 'Акушерство', slug: 'obstetrics', order: 2 },
     { name: 'Анатомия', slug: 'anatomy', order: 3 },
@@ -79,22 +64,61 @@ async function main() {
     { name: 'Эндокринология', slug: 'endocrinology', order: 50 },
   ];
 
-  for (const subject of subjects) {
-    await prisma.subject.upsert({
-      where: { slug: subject.slug },
-      update: {},
-      create: subject,
-    });
+  // Get existing subjects
+  const existingSubjects = await prisma.subject.findMany();
+  console.log(`📊 Found ${existingSubjects.length} existing subjects`);
+
+  // Delete old subjects that are not in the new list
+  const newSlugs = newSubjects.map(s => s.slug);
+  const toDelete = existingSubjects.filter(s => !newSlugs.includes(s.slug));
+  
+  if (toDelete.length > 0) {
+    console.log(`\n🗑️  Deleting ${toDelete.length} old subjects:`);
+    for (const subject of toDelete) {
+      console.log(`   - ${subject.name}`);
+      await prisma.subject.delete({ where: { id: subject.id } });
+    }
   }
 
-  console.log(`✅ Created ${subjects.length} subjects`);
+  // Create or update subjects
+  console.log(`\n✅ Creating/updating ${newSubjects.length} subjects:`);
+  let created = 0;
+  let updated = 0;
 
-  console.log('🎉 Seeding completed!');
+  for (const subject of newSubjects) {
+    const existing = existingSubjects.find(s => s.slug === subject.slug);
+    
+    if (existing) {
+      // Update existing
+      await prisma.subject.update({
+        where: { id: existing.id },
+        data: {
+          name: subject.name,
+          order: subject.order,
+        },
+      });
+      console.log(`   ✏️  Updated: ${subject.name}`);
+      updated++;
+    } else {
+      // Create new
+      await prisma.subject.create({
+        data: subject,
+      });
+      console.log(`   ➕ Created: ${subject.name}`);
+      created++;
+    }
+  }
+
+  console.log(`\n📊 Summary:`);
+  console.log(`   ➕ Created: ${created}`);
+  console.log(`   ✏️  Updated: ${updated}`);
+  console.log(`   🗑️  Deleted: ${toDelete.length}`);
+  console.log(`\n🎉 Subjects updated successfully!`);
 }
 
-main()
+updateSubjects()
   .catch((e) => {
-    console.error('❌ Seeding error:', e);
+    console.error('❌ Error updating subjects:', e);
     process.exit(1);
   })
   .finally(async () => {
