@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatFileSize, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Download, Cloud, HardDrive, ExternalLink } from 'lucide-react';
+import { Check, X, Trash2, Download, Cloud, HardDrive, ExternalLink, RefreshCw } from 'lucide-react';
 
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('PENDING');
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchMaterials();
@@ -22,6 +23,7 @@ export default function AdminMaterialsPage() {
       const data = await response.json();
       if (data.success) {
         setMaterials(data.data);
+        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Error fetching materials:', error);

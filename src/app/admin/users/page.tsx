@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Mail, MailCheck } from 'lucide-react';
+import { Check, X, Trash2, Mail, MailCheck, RefreshCw } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchUsers();
@@ -22,6 +23,7 @@ export default function AdminUsersPage() {
       const data = await response.json();
       if (data.success) {
         setUsers(data.data);
+        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -89,11 +91,27 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Управление пользователями</h2>
-        <p className="text-muted-foreground mt-2">
-          Одобряйте или отклоняйте заявки на регистрацию
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Управление пользователями</h2>
+          <p className="text-muted-foreground mt-2">
+            Одобряйте или отклоняйте заявки на регистрацию
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchUsers}
+            disabled={isLoading}
+            title="Обновить список"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

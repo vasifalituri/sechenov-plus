@@ -5,7 +5,7 @@ import { DiscussionCard } from './DiscussionCard';
 import { DiscussionFilters } from './DiscussionFilters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import type { Discussion, Subject } from '@/types/models';
 
@@ -22,6 +22,7 @@ export const DiscussionsList = memo(function DiscussionsList({
   const [isLoading, setIsLoading] = useState(false);
   const [sort, setSort] = useState('popular');
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchDiscussions = useCallback(async () => {
     setIsLoading(true);
@@ -34,6 +35,7 @@ export const DiscussionsList = memo(function DiscussionsList({
       const data = await response.json();
       if (data.success) {
         setDiscussions(data.data);
+        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Error fetching discussions:', error);
@@ -48,13 +50,29 @@ export const DiscussionsList = memo(function DiscussionsList({
 
   return (
     <div className="space-y-4">
-      <DiscussionFilters
-        sort={sort}
-        selectedSubject={selectedSubject}
-        subjects={subjects}
-        onSortChange={setSort}
-        onSubjectChange={setSelectedSubject}
-      />
+      <div className="flex items-center justify-between gap-4">
+        <DiscussionFilters
+          sort={sort}
+          selectedSubject={selectedSubject}
+          subjects={subjects}
+          onSortChange={setSort}
+          onSubjectChange={setSelectedSubject}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchDiscussions}
+            disabled={isLoading}
+            title="Обновить список"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
 
       {/* Discussions List */}
       {isLoading ? (
