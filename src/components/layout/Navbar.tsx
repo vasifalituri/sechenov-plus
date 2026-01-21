@@ -23,6 +23,7 @@ export function Navbar() {
     { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
     { href: '/materials', label: 'Материалы', icon: BookOpen },
     { href: '/discussions', label: 'Обсуждения', icon: MessageSquare },
+    { href: '/resources', label: 'Ресурсы', icon: Link2 },
     { href: '/bookmarks', label: 'Избранное', icon: Bookmark },
     { href: '/messages', label: 'Сообщения', icon: Mail, badge: unreadCount },
   ];

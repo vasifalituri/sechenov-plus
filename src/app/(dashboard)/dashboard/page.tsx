@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, MessageSquare, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { GlobalSearch } from '@/components/layout/GlobalSearch';
 
 async function getStats() {
   const [materialsCount, threadsCount, usersCount] = await Promise.all([
@@ -175,6 +176,19 @@ export default async function HomePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Global Search Bar */}
+      <Card className="p-6">
+        <div className="flex flex-col space-y-3">
+          <h2 className="text-xl font-semibold">🔍 Поиск по всему сайту</h2>
+          <p className="text-sm text-muted-foreground">
+            Найдите материалы, обсуждения или пользователей
+          </p>
+          <div className="w-full">
+            <GlobalSearch />
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Discussions - Reddit style */}
