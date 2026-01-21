@@ -9,12 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ACADEMIC_YEARS } from '@/lib/constants';
+import { Mail, CheckCircle, RefreshCw } from 'lucide-react';
 
 export function RegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -76,10 +82,9 @@ export function RegisterForm() {
         return;
       }
 
-      setSuccess(true);
-      setTimeout(() => {
-        router.push('/login?message=registered');
-      }, 2000);
+      // Show verification form
+      setUserId(data.data.id);
+      setShowVerification(true);
     } catch (err) {
       setError('Произошла ошибка при регистрации');
     } finally {
@@ -87,19 +92,157 @@ export function RegisterForm() {
     }
   };
 
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          code: verificationCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || 'Неверный код подтверждения');
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/login?message=verified');
+      }, 2000);
+    } catch (err) {
+      setError('Произошла ошибка при проверке кода');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsResending(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          userId: userId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || 'Ошибка отправки кода');
+        return;
+      }
+
+      setError('');
+      alert('Новый код отправлен на ваш email!');
+    } catch (err) {
+      setError('Произошла ошибка при отправке кода');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  // Email verification form
+  if (showVerification && !success) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-primary/10 p-4 rounded-full">
+              <Mail className="w-8 h-8 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl text-center">
+            Подтвердите email
+          </CardTitle>
+          <CardDescription className="text-center">
+            Мы отправили 6-значный код на <strong>{formData.email}</strong>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div>
+              <Label htmlFor="code">Код подтверждения</Label>
+              <Input
+                id="code"
+                type="text"
+                placeholder="123456"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+                required
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Код действителен 15 минут
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isVerifying || verificationCode.length !== 6}
+            >
+              {isVerifying ? 'Проверка...' : 'Подтвердить'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2">
+          <div className="text-sm text-center text-muted-foreground">
+            Не получили код?
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleResendCode}
+            disabled={isResending}
+            className="w-full"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isResending ? 'animate-spin' : ''}`} />
+            {isResending ? 'Отправка...' : 'Отправить повторно'}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // Success state
   if (success) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-green-600">
-            Регистрация успешна! ✅
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-green-100 p-4 rounded-full">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl text-green-600 text-center">
+            Email подтвержден! ✅
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-center">
             Ваша заявка отправлена. Ожидайте одобрения администратора.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground text-center">
             Перенаправление на страницу входа...
           </p>
         </CardContent>

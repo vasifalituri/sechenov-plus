@@ -43,40 +43,42 @@ enum BookmarkType {
 }
 
 enum StorageType {
-  SUPABASE      // Files stored in Supabase Storage
+  SUPABASE // Files stored in Supabase Storage
   EXTERNAL_MEGA // Files stored in MEGA
-  LOCAL         // Legacy: files in local filesystem (for migration)
+  LOCAL // Legacy: files in local filesystem (for migration)
 }
 
 // Models
 model User {
-  id                    String   @id @default(uuid())
-  email                 String   @unique
-  username              String?  @unique
-  password              String
-  fullName              String
-  academicYear          Int      // 1-6
-  profileImage          String?  // Path to profile image
-  status                UserStatus @default(PENDING)
-  role                  UserRole   @default(USER)
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
+  id            String     @id @default(uuid())
+  email         String     @unique
+  username      String?    @unique
+  password      String
+  fullName      String
+  academicYear  Int // 1-6
+  profileImage  String? // Path to profile image
+  status        UserStatus @default(PENDING)
+  role          UserRole   @default(USER)
+  emailVerified Boolean    @default(false) // Email verification status
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   // Relations
-  uploadedMaterials     Material[]        @relation("MaterialUploader")
-  approvedMaterials     Material[]        @relation("MaterialApprover")
-  discussionThreads     DiscussionThread[] @relation("ThreadAuthor")
-  approvedThreads       DiscussionThread[] @relation("ThreadApprover")
-  comments              Comment[]          @relation("CommentAuthor")
-  approvedComments      Comment[]          @relation("CommentApprover")
-  votes                 Vote[]
-  sentMessages          Message[]          @relation("MessageSender")
-  receivedMessages      Message[]          @relation("MessageReceiver")
-  bookmarks             Bookmark[]
-  ratings               Rating[]
-  notifications         Notification[]     @relation("NotificationReceiver")
-  createdNotifications  Notification[]     @relation("NotificationCreator")
-  downloads             MaterialDownload[]
+  uploadedMaterials    Material[]         @relation("MaterialUploader")
+  approvedMaterials    Material[]         @relation("MaterialApprover")
+  discussionThreads    DiscussionThread[] @relation("ThreadAuthor")
+  approvedThreads      DiscussionThread[] @relation("ThreadApprover")
+  comments             Comment[]          @relation("CommentAuthor")
+  approvedComments     Comment[]          @relation("CommentApprover")
+  votes                Vote[]
+  sentMessages         Message[]          @relation("MessageSender")
+  receivedMessages     Message[]          @relation("MessageReceiver")
+  bookmarks            Bookmark[]
+  ratings              Rating[]
+  notifications        Notification[]     @relation("NotificationReceiver")
+  createdNotifications Notification[]     @relation("NotificationCreator")
+  downloads            MaterialDownload[]
+  verificationCodes    VerificationCode[]
 
   @@index([email])
   @@index([username])
@@ -86,7 +88,7 @@ model User {
 
 model Subject {
   id          String   @id @default(uuid())
-  name        String   // e.g., "Анатомия"
+  name        String // e.g., "Анатомия"
   slug        String   @unique // e.g., "anatomy"
   description String?
   order       Int      @default(0) // For sorting
@@ -105,15 +107,15 @@ model Material {
   title         String
   description   String?
   subjectId     String
-  academicYear  Int           // 1-6
-  filePath      String        // Storage path (Supabase path or external identifier)
-  fileName      String        // Original filename
+  academicYear  Int // 1-6
+  filePath      String // Storage path (Supabase path or external identifier)
+  fileName      String // Original filename
   fileType      FileType
-  fileSize      Int           // In bytes
+  fileSize      Int // In bytes
   storageType   StorageType   @default(SUPABASE) // Where file is stored
-  storageBucket String?       // Supabase bucket name (e.g., "materials")
-  externalUrl   String?       // Direct URL for external storage (MEGA, etc.)
-  tags          String[]      // ["high-yield", "exam-relevant"]
+  storageBucket String? // Supabase bucket name (e.g., "materials")
+  externalUrl   String? // Direct URL for external storage (MEGA, etc.)
+  tags          String[] // ["high-yield", "exam-relevant"]
   status        ContentStatus @default(PENDING)
   uploadedById  String
   approvedById  String?
@@ -122,12 +124,12 @@ model Material {
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  subject      Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  uploadedBy   User       @relation("MaterialUploader", fields: [uploadedById], references: [id])
-  approvedBy   User?      @relation("MaterialApprover", fields: [approvedById], references: [id])
-  bookmarks    Bookmark[]
-  ratings      Rating[]
-  downloads    MaterialDownload[]
+  subject    Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedBy User               @relation("MaterialUploader", fields: [uploadedById], references: [id])
+  approvedBy User?              @relation("MaterialApprover", fields: [approvedById], references: [id])
+  bookmarks  Bookmark[]
+  ratings    Rating[]
+  downloads  MaterialDownload[]
 
   @@index([subjectId])
   @@index([academicYear])
@@ -138,9 +140,9 @@ model Material {
 
 // Track unique downloads per user
 model MaterialDownload {
-  id          String   @id @default(uuid())
-  materialId  String
-  userId      String
+  id           String   @id @default(uuid())
+  materialId   String
+  userId       String
   downloadedAt DateTime @default(now())
 
   material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
@@ -157,7 +159,7 @@ model DiscussionThread {
   title         String
   content       String        @db.Text
   subjectId     String
-  academicYear  Int           // 1-6
+  academicYear  Int // 1-6
   authorId      String
   status        ContentStatus @default(PENDING)
   approvedById  String?
@@ -188,7 +190,7 @@ model Comment {
   id           String        @id @default(uuid())
   content      String        @db.Text
   threadId     String
-  parentId     String?       // For nested comments
+  parentId     String? // For nested comments
   authorId     String
   status       ContentStatus @default(PENDING)
   approvedById String?
@@ -256,13 +258,13 @@ model Message {
 }
 
 model Bookmark {
-  id             String       @id @default(uuid())
-  userId         String
-  type           BookmarkType
-  materialId     String?
-  discussionId   String?
-  note           String?      @db.Text // Optional note for the bookmark
-  createdAt      DateTime     @default(now())
+  id           String       @id @default(uuid())
+  userId       String
+  type         BookmarkType
+  materialId   String?
+  discussionId String?
+  note         String?      @db.Text // Optional note for the bookmark
+  createdAt    DateTime     @default(now())
 
   // Relations
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -281,7 +283,7 @@ model Rating {
   id         String   @id @default(uuid())
   userId     String
   materialId String
-  rating     Int      // 1-5 stars
+  rating     Int // 1-5 stars
   review     String?  @db.Text // Optional text review
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -298,22 +300,22 @@ model Rating {
 }
 
 enum NotificationType {
-  MENTION           // Упомянули в комментарии
-  REPLY             // Ответили на комментарий
-  NEW_MESSAGE       // Новое личное сообщение
-  MATERIAL_RATED    // Оценили ваш материал
+  MENTION // Упомянули в комментарии
+  REPLY // Ответили на комментарий
+  NEW_MESSAGE // Новое личное сообщение
+  MATERIAL_RATED // Оценили ваш материал
 }
 
 model Notification {
-  id        String           @id @default(uuid())
-  userId    String           // Кому уведомление
-  type      NotificationType
-  title     String
-  message   String           @db.Text
-  link      String?          // Ссылка на источник уведомления
-  isRead    Boolean          @default(false)
-  createdById String?        // Кто создал уведомление (опционально)
-  createdAt DateTime         @default(now())
+  id          String           @id @default(uuid())
+  userId      String // Кому уведомление
+  type        NotificationType
+  title       String
+  message     String           @db.Text
+  link        String? // Ссылка на источник уведомления
+  isRead      Boolean          @default(false)
+  createdById String? // Кто создал уведомление (опционально)
+  createdAt   DateTime         @default(now())
 
   // Relations
   user      User  @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
@@ -323,4 +325,24 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+// Email verification codes
+model VerificationCode {
+  id        String   @id @default(uuid())
+  userId    String
+  email     String
+  code      String // 6-digit code
+  expiresAt DateTime // Code valid for 15 minutes
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("verification_codes")
 }
