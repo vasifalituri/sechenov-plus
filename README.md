@@ -102,7 +102,7 @@ NEXTAUTH_SECRET="your-super-secret-key-change-this"
 
 # Resend (Email verification)
 RESEND_API_KEY="re_xxxxxxxxxxxx"
-EMAIL_FROM="Sechenov+ <onboarding@resend.dev>"
+EMAIL_FROM="onboarding@resend.dev"
 ```
 
 ### Шаг 3: Инициализация базы данных
