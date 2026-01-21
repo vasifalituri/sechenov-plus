@@ -142,9 +142,33 @@ export async function POST(req: Request) {
         expiresIn: 15, // minutes
       });
     } catch (emailError) {
-      logger.error('Failed to send verification email', emailError);
+      // Log detailed error for debugging
+      const errorMessage = emailError instanceof Error ? emailError.message : 'Unknown error';
+      const errorDetails = emailError instanceof Error ? emailError.stack : JSON.stringify(emailError);
+      
+      logger.error('Failed to send verification email', { 
+        error: errorMessage,
+        details: errorDetails,
+        email: user.email,
+        userId: user.id
+      });
+
+      // Check for specific Resend errors
+      let userMessage = 'Ошибка отправки email. Попробуйте позже.';
+      if (errorMessage.includes('domain') || errorMessage.includes('DNS')) {
+        userMessage = 'Ошибка конфигурации email домена. Обратитесь к администратору.';
+      } else if (errorMessage.includes('rate limit')) {
+        userMessage = 'Слишком много попыток. Попробуйте через несколько минут.';
+      } else if (errorMessage.includes('invalid')) {
+        userMessage = 'Неверный формат email адреса.';
+      }
+
       return NextResponse.json(
-        { success: false, error: 'Ошибка отправки email. Попробуйте позже.' },
+        { 
+          success: false, 
+          error: userMessage,
+          debug: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        },
         { status: 500 }
       );
     }

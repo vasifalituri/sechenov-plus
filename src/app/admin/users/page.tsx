@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Check, X, Trash2, Mail, MailCheck } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -42,9 +42,12 @@ export default function AdminUsersPage() {
       if (data.success) {
         fetchUsers();
         alert(data.message);
+      } else {
+        alert(data.error || 'Ошибка при обновлении статуса');
       }
     } catch (error) {
       console.error('Error updating user:', error);
+      alert('Ошибка при обновлении статуса');
     }
   };
 
@@ -139,7 +142,20 @@ export default function AdminUsersPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <div>
-                      <h4 className="font-medium">{user.fullName}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{user.fullName}</h4>
+                        {user.emailVerified ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            <MailCheck className="w-3 h-3 mr-1" />
+                            Email подтвержден
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                            <Mail className="w-3 h-3 mr-1" />
+                            Email не подтвержден
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {user.email} • {user.academicYear} курс • {user.role}
                       </p>
@@ -160,6 +176,8 @@ export default function AdminUsersPage() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(user.id, 'APPROVED')}
+                        disabled={!user.emailVerified}
+                        title={!user.emailVerified ? 'Пользователь должен подтвердить email' : 'Одобрить пользователя'}
                       >
                         <Check className="w-4 h-4 mr-1" />
                         Одобрить

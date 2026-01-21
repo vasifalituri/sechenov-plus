@@ -19,6 +19,7 @@ export async function GET() {
         academicYear: true,
         status: true,
         role: true,
+        emailVerified: true,
         createdAt: true,
       },
     });
@@ -47,6 +48,25 @@ export async function PATCH(req: Request) {
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Check if user has verified email before approving
+    if (status === 'APPROVED') {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { emailVerified: true, email: true },
+      });
+
+      if (!user?.emailVerified) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Невозможно одобрить пользователя. Email не подтвержден.',
+            details: 'Пользователь должен подтвердить свой email перед одобрением.' 
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const user = await prisma.user.update({

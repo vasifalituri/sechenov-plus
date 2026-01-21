@@ -21,6 +21,7 @@ export function RegisterForm() {
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -143,11 +144,26 @@ export function RegisterForm() {
 
       if (!data.success) {
         setError(data.error || 'Ошибка отправки кода');
+        if (data.debug) {
+          console.error('Resend debug:', data.debug);
+        }
         return;
       }
 
       setError('');
       alert('Новый код отправлен на ваш email!');
+      
+      // Start 60 second timer before allowing resend again
+      setResendTimer(60);
+      const interval = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (err) {
       setError('Произошла ошибка при отправке кода');
     } finally {
@@ -213,11 +229,16 @@ export function RegisterForm() {
           <Button
             variant="outline"
             onClick={handleResendCode}
-            disabled={isResending}
+            disabled={isResending || resendTimer > 0}
             className="w-full"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isResending ? 'animate-spin' : ''}`} />
-            {isResending ? 'Отправка...' : 'Отправить повторно'}
+            {isResending 
+              ? 'Отправка...' 
+              : resendTimer > 0 
+                ? `Повторная отправка через ${resendTimer}с`
+                : 'Отправить повторно'
+            }
           </Button>
         </CardFooter>
       </Card>
