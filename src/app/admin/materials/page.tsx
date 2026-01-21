@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatFileSize, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Download } from 'lucide-react';
+import { Check, X, Trash2, Download, Cloud, HardDrive } from 'lucide-react';
 
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<any[]>([]);
@@ -65,6 +65,31 @@ export default function AdminMaterialsPage() {
       }
     } catch (error) {
       console.error('Error deleting material:', error);
+    }
+  };
+
+  const handleMigrateToMega = async (materialId: string) => {
+    if (!confirm('Перенести этот файл в MEGA хранилище?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/materials/migrate-to-mega', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materialId }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        fetchMaterials();
+        alert('Файл успешно перенесён в MEGA!');
+      } else {
+        alert(`Ошибка: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error migrating to MEGA:', error);
+      alert('Ошибка при переносе в MEGA');
     }
   };
 
@@ -141,6 +166,17 @@ export default function AdminMaterialsPage() {
                     <Badge variant="secondary">{material.subject.name}</Badge>
                     <Badge variant="outline">{material.academicYear} курс</Badge>
                     <Badge variant="outline">{material.fileType}</Badge>
+                    {material.storageType === 'EXTERNAL_MEGA' ? (
+                      <Badge variant="default" className="bg-purple-600">
+                        <Cloud className="w-3 h-3 mr-1" />
+                        MEGA
+                      </Badge>
+                    ) : (
+                      <Badge variant="default" className="bg-blue-600">
+                        <HardDrive className="w-3 h-3 mr-1" />
+                        Supabase
+                      </Badge>
+                    )}
                   </div>
                   <h4 className="font-medium mb-1">{material.title}</h4>
                   <p className="text-sm text-muted-foreground mb-2">
@@ -169,6 +205,17 @@ export default function AdminMaterialsPage() {
                       <Download className="w-4 h-4" />
                     </Button>
                   </a>
+
+                  {material.storageType === 'SUPABASE' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMigrateToMega(material.id)}
+                      title="Перенести в MEGA"
+                    >
+                      <Cloud className="w-4 h-4" />
+                    </Button>
+                  )}
 
                   {material.status === 'PENDING' && (
                     <>

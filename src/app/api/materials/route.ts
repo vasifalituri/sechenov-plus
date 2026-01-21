@@ -168,10 +168,27 @@ export async function POST(req: Request) {
       userId: session.user.id,
     });
 
+    // Automatically trigger migration to MEGA in background (non-blocking)
+    if (validatedData.storageType === 'SUPABASE') {
+      // Trigger migration asynchronously (fire and forget)
+      fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/materials/migrate-to-mega`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cookie': req.headers.get('cookie') || '', // Forward session
+        },
+        body: JSON.stringify({ materialId: material.id }),
+      }).catch(err => {
+        logger.warn('Background MEGA migration failed (non-critical)', { materialId: material.id, error: err });
+      });
+
+      logger.info('Background MEGA migration triggered', { materialId: material.id });
+    }
+
     return NextResponse.json({ 
       success: true, 
       data: material,
-      message: 'Материал загружен успешно! Ожидает проверки администратором.' 
+      message: 'Материал загружен успешно! Ожидает проверки администратором. Файл будет автоматически перенесён в MEGA.' 
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to create material';
