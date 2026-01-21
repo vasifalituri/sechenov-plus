@@ -61,18 +61,24 @@ export async function GET(
 
     // Handle different storage types
     if (material.storageType === 'EXTERNAL_MEGA') {
-      // For external storage, redirect to the external URL
+      // For external storage, return the MEGA URL so frontend can open it in new tab
       if (!material.externalUrl) {
         return NextResponse.json({ error: 'External URL not found' }, { status: 404 });
       }
       
-      logger.info('Redirecting to external storage', {
+      logger.info('Returning MEGA URL for client-side redirect', {
         materialId: id,
         storageType: material.storageType,
       });
 
-      // Redirect to external URL
-      return NextResponse.redirect(material.externalUrl);
+      // Return JSON with MEGA URL instead of redirecting
+      // Frontend will open this in a new tab
+      return NextResponse.json({
+        success: true,
+        downloadType: 'EXTERNAL_MEGA',
+        externalUrl: material.externalUrl,
+        fileName: material.fileName,
+      });
     } else if (material.storageType === 'SUPABASE') {
       // Download from Supabase Storage
       try {

@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { BookmarkButton } from '@/components/ui/bookmark-button';
 import { StarRating } from '@/components/ui/star-rating';
-import { Download, FileText, ArrowLeft } from 'lucide-react';
+import { DownloadButton } from '@/components/materials/DownloadButton';
+import { FileText, ArrowLeft } from 'lucide-react';
 import { formatDate, formatFileSize } from '@/lib/utils';
 
 async function getMaterial(id: string) {
@@ -106,16 +107,13 @@ export default async function MaterialDetailPage({
 
           <div className="space-y-3" suppressHydrationWarning>
             <div className="flex gap-3" suppressHydrationWarning>
-              <a
-                href={`/api/materials/download/${material.id}`}
-                download
+              <DownloadButton
+                materialId={material.id}
+                fileName={material.fileName}
+                storageType={material.storageType}
                 className="flex-1"
-              >
-                <Button size="lg" className="w-full">
-                  <Download className="w-5 h-5 mr-2" />
-                  Скачать материал
-                </Button>
-              </a>
+                size="lg"
+              />
               <BookmarkButton
                 type="MATERIAL"
                 itemId={material.id}

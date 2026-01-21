@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatFileSize, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Download, Cloud, HardDrive } from 'lucide-react';
+import { Check, X, Trash2, Download, Cloud, HardDrive, ExternalLink } from 'lucide-react';
 
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<any[]>([]);
@@ -90,6 +90,35 @@ export default function AdminMaterialsPage() {
     } catch (error) {
       console.error('Error migrating to MEGA:', error);
       alert('Ошибка при переносе в MEGA');
+    }
+  };
+
+  const handleDownload = async (materialId: string, storageType: string) => {
+    try {
+      const response = await fetch(`/api/materials/download/${materialId}`);
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        // MEGA file - open in new tab
+        const data = await response.json();
+        if (data.success && data.externalUrl) {
+          window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        // Regular download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'material';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error downloading:', error);
+      alert('Ошибка при скачивании');
     }
   };
 
@@ -196,15 +225,18 @@ export default function AdminMaterialsPage() {
                     {getStatusLabel(material.status)}
                   </Badge>
 
-                  <a
-                    href={`/api/materials/download/${material.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownload(material.id, material.storageType)}
+                    title={material.storageType === 'EXTERNAL_MEGA' ? 'Открыть в MEGA' : 'Скачать'}
                   >
-                    <Button size="sm" variant="outline">
+                    {material.storageType === 'EXTERNAL_MEGA' ? (
+                      <ExternalLink className="w-4 h-4" />
+                    ) : (
                       <Download className="w-4 h-4" />
-                    </Button>
-                  </a>
+                    )}
+                  </Button>
 
                   {material.storageType === 'SUPABASE' && (
                     <Button
