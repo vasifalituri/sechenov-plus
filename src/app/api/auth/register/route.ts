@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { Resend } from 'resend';
 import { z } from 'zod';
 import { rateLimit, createRateLimitResponse, getClientIdentifier } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
-
-// Initialize Resend only if API key is available
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+import { sendVerificationEmail } from '@/lib/email';
 
 // Generate 6-digit code
 function generateVerificationCode(): string {
@@ -24,12 +21,12 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: 5 registration attempts per hour per IP
+    // Rate limiting: 50 registration attempts per hour per IP (increased for testing)
     const identifier = getClientIdentifier(req);
     const rateLimitResult = await rateLimit(identifier, {
       interval: 60 * 60 * 1000, // 1 hour
       uniqueTokenPerInterval: 500,
-      maxRequests: 5,
+      maxRequests: 50, // Increased from 5 to 50 for testing
     });
     
     const rateLimitResponse = createRateLimitResponse(rateLimitResult);
@@ -95,71 +92,13 @@ export async function POST(req: Request) {
     });
 
     // Send verification email
-    try {
-      if (!resend) {
-        logger.warn('Resend API key not configured, skipping verification email');
-        return NextResponse.json({
-          success: true,
-          message: 'Регистрация успешна! Email сервис временно недоступен.',
-          data: {
-            id: user.id,
-            email: user.email,
-            status: user.status,
-            emailVerified: false,
-          },
-        });
-      }
-
-      await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'Sechenov+ <onboarding@resend.dev>',
-        to: user.email,
-        subject: 'Подтвердите email - Sechenov+',
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                .code-box { background: white; border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }
-                .code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #667eea; }
-                .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>🎓 Sechenov+</h1>
-                  <p>Добро пожаловать!</p>
-                </div>
-                <div class="content">
-                  <p>Здравствуйте, <strong>${user.fullName}</strong>!</p>
-                  <p>Спасибо за регистрацию на платформе Sechenov+. Введите код подтверждения для завершения регистрации:</p>
-                  
-                  <div class="code-box">
-                    <div class="code">${code}</div>
-                    <p style="margin: 10px 0 0 0; color: #666;">Код действителен 15 минут</p>
-                  </div>
-
-                  <p>После подтверждения email, администратор рассмотрит вашу заявку.</p>
-                  <p>С уважением,<br>Команда Sechenov+</p>
-                </div>
-                <div class="footer">
-                  <p>© 2025 Sechenov+ | Платформа для медицинских студентов</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `,
-      });
-
-      logger.info(`Verification code sent to ${user.email}`);
-    } catch (emailError) {
-      logger.error('Failed to send verification email', emailError);
+    const emailResult = await sendVerificationEmail(user.email, code, user.fullName);
+    
+    if (!emailResult.success) {
+      logger.error('Failed to send verification email', emailResult.error);
       // Don't fail registration if email fails - user can request new code
+    } else {
+      logger.info(`Verification code sent to ${user.email}`);
     }
 
     return NextResponse.json({
