@@ -16,7 +16,7 @@ const updateSchema = z.object({
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,9 +30,10 @@ export async function PATCH(
 
     const body = await req.json();
     const validatedData = updateSchema.parse(body);
+    const { id } = await params;
 
     const announcement = await prisma.announcement.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...validatedData,
         expiresAt: validatedData.expiresAt
@@ -75,7 +76,7 @@ export async function PATCH(
 // Delete announcement
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -87,8 +88,10 @@ export async function DELETE(
       );
     }
 
+    const { id } = await params;
+
     await prisma.announcement.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({
