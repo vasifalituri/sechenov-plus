@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BookOpen, MessageSquare, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
+import { AnnouncementBanner } from '@/components/shared/AnnouncementBanner';
 
 async function getStats() {
   const [materialsCount, threadsCount, usersCount] = await Promise.all([
@@ -153,6 +154,9 @@ export default async function HomePage() {
           </p>
         </div>
       </div>
+
+      {/* Announcements */}
+      <AnnouncementBanner />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

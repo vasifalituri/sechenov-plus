@@ -79,6 +79,7 @@ model User {
   createdNotifications Notification[]     @relation("NotificationCreator")
   downloads            MaterialDownload[]
   verificationCodes    VerificationCode[]
+  announcements        Announcement[]     @relation("AnnouncementAuthor")
 
   @@index([email])
   @@index([username])
@@ -345,4 +346,36 @@ model VerificationCode {
   @@index([code])
   @@index([expiresAt])
   @@map("verification_codes")
+}
+
+// Announcements - Admin can post announcements on the homepage
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String           // Title of the announcement
+  content   String           @db.Text // Full content (supports markdown)
+  type      AnnouncementType @default(INFO) // Type: INFO, WARNING, SUCCESS, ERROR
+  priority  Int              @default(0) // Higher number = shown first
+  isActive  Boolean          @default(true) // Only active announcements are shown
+
+  // Author
+  authorId String
+  author   User   @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime? // Optional expiration date
+
+  @@index([isActive])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([authorId])
+  @@map("announcements")
+}
+
+enum AnnouncementType {
+  INFO    // Blue - general information
+  WARNING // Yellow - important notices
+  SUCCESS // Green - positive news
+  ERROR   // Red - critical alerts
 }
