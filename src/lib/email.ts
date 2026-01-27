@@ -6,11 +6,6 @@ const createTransporter = () => {
   const gmailUser = process.env.GMAIL_USER;
   const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
-  // Temporary debug logging
-  console.log('🔍 DEBUG: GMAIL_USER =', gmailUser);
-  console.log('🔍 DEBUG: GMAIL_APP_PASSWORD length =', gmailAppPassword?.length);
-  console.log('🔍 DEBUG: GMAIL_APP_PASSWORD first 4 chars =', gmailAppPassword?.substring(0, 4));
-
   if (!gmailUser || !gmailAppPassword) {
     console.warn('⚠️ Gmail SMTP not configured. Email sending will fail.');
     console.warn('Please set GMAIL_USER and GMAIL_APP_PASSWORD in .env.local');
