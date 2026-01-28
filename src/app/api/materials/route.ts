@@ -122,6 +122,7 @@ export async function POST(req: Request) {
       storageType: z.enum(['SUPABASE', 'EXTERNAL_MEGA', 'LOCAL']).optional().default('SUPABASE'),
       storageBucket: z.string().optional(),
       externalUrl: z.string().url().optional(),
+      megaAccountId: z.number().int().positive().optional(), // Which MEGA account stores this file
     });
 
     const validatedData = schema.parse(body);
@@ -144,6 +145,7 @@ export async function POST(req: Request) {
         storageType: validatedData.storageType,
         storageBucket: validatedData.storageBucket,
         externalUrl: validatedData.externalUrl,
+        megaAccountId: validatedData.megaAccountId,
         subjectId: validatedData.subjectId,
         academicYear: validatedData.academicYear,
         uploadedById: session.user.id,

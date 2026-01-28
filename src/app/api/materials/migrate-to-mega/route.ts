@@ -90,11 +90,12 @@ export async function POST(req: Request) {
     });
 
     // Upload to MEGA
-    const megaUrl = await uploadToMega(file, material.fileName);
+    const { url: megaUrl, accountId: megaAccountId } = await uploadToMega(file, material.fileName);
 
     logger.info('File uploaded to MEGA', {
       fileName: material.fileName,
       megaUrl,
+      megaAccountId,
     });
 
     // Update database
@@ -103,6 +104,7 @@ export async function POST(req: Request) {
       data: {
         storageType: 'EXTERNAL_MEGA',
         externalUrl: megaUrl,
+        megaAccountId: megaAccountId,
       },
     });
 

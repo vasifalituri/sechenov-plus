@@ -184,12 +184,13 @@ export async function POST(req: Request) {
       userId: session.user.id,
     });
 
-    const externalUrl = await uploadToMega(file, file.name);
+    const { url: externalUrl, accountId: megaAccountId } = await uploadToMega(file, file.name);
 
     logger.info('File uploaded to MEGA successfully', {
       fileName: file.name,
       fileSize: file.size,
       externalUrl: externalUrl,
+      megaAccountId: megaAccountId,
       userId: session.user.id,
     });
 
@@ -197,6 +198,7 @@ export async function POST(req: Request) {
       success: true,
       data: {
         externalUrl: externalUrl,
+        megaAccountId: megaAccountId,
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,

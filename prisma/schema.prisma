@@ -116,6 +116,7 @@ model Material {
   storageType   StorageType   @default(SUPABASE) // Where file is stored
   storageBucket String? // Supabase bucket name (e.g., "materials")
   externalUrl   String? // Direct URL for external storage (MEGA, etc.)
+  megaAccountId Int? // Which MEGA account stores this file (1, 2, 3, etc.)
   tags          String[] // ["high-yield", "exam-relevant"]
   status        ContentStatus @default(PENDING)
   uploadedById  String
