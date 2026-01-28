@@ -3,7 +3,7 @@
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Users, FileText, MessageSquare, BarChart3 } from 'lucide-react';
+import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'lucide-react';
 
 export function AdminWrapper({ children }: { children: React.ReactNode }) {
   const navItems = [
@@ -12,6 +12,7 @@ export function AdminWrapper({ children }: { children: React.ReactNode }) {
     { href: '/admin/materials', label: 'Материалы', icon: FileText },
     { href: '/admin/discussions', label: 'Обсуждения', icon: MessageSquare },
     { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3 },
+    { href: '/admin/announcements', label: 'Объявления', icon: Megaphone },
   ];
 
   return (
