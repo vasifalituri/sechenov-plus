@@ -52,6 +52,8 @@ export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchConversations();
@@ -103,6 +105,33 @@ export default function MessagesPage() {
       console.error('Error fetching messages:', error);
     }
   };
+
+  const searchUsers = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchUsers(searchQuery);
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedUser) return;
@@ -159,18 +188,55 @@ export default function MessagesPage() {
             />
           </div>
 
-          {/* Conversations */}
+          {/* Conversations and Search Results */}
           <div className="flex-1 overflow-y-auto space-y-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
+            ) : searchQuery && searchResults.length > 0 ? (
+              // Show search results when searching
+              <>
+                <div className="text-xs font-medium text-muted-foreground px-2 py-1">
+                  Найденные пользователи
+                </div>
+                {searchResults.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => {
+                      setSelectedUser(user.username);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    className="w-full text-left p-3 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">@{user.username}</p>
+                        <p className="text-xs text-muted-foreground">{user.fullName}</p>
+                        <p className="text-xs text-muted-foreground">{user.academicYear} курс</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </>
+            ) : searchQuery && !isSearching && searchResults.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Пользователи не найдены
+              </div>
             ) : filteredConversations.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                {searchQuery ? 'Ничего не найдено' : 'Нет сообщений'}
+                <p className="mb-2">Нет активных бесед</p>
+                <p className="text-xs">Найдите пользователя выше, чтобы начать переписку</p>
               </div>
             ) : (
-              filteredConversations.map((conv) => (
+              <>
+                {searchQuery && (
+                  <div className="text-xs font-medium text-muted-foreground px-2 py-1">
+                    Активные беседы
+                  </div>
+                )}
+                {filteredConversations.map((conv) => (
                 <button
                   key={conv.userId}
                   onClick={() => setSelectedUser(conv.username)}
@@ -201,7 +267,8 @@ export default function MessagesPage() {
                     {formatDateTime(conv.lastMessageTime)}
                   </p>
                 </button>
-              ))
+              ))}
+            </>
             )}
           </div>
         </CardContent>
