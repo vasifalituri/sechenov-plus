@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Info, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Info, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface Announcement {
   id: string;
@@ -18,12 +17,10 @@ interface Announcement {
 
 export function AnnouncementBanner() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAnnouncements();
-    loadDismissedIds();
   }, []);
 
   const fetchAnnouncements = async () => {
@@ -38,52 +35,31 @@ export function AnnouncementBanner() {
     }
   };
 
-  const loadDismissedIds = () => {
-    try {
-      const stored = localStorage.getItem('dismissedAnnouncements');
-      if (stored) {
-        setDismissedIds(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading dismissed announcements:', error);
-    }
-  };
-
-  const handleDismiss = (id: string) => {
-    const newDismissedIds = [...dismissedIds, id];
-    setDismissedIds(newDismissedIds);
-    try {
-      localStorage.setItem('dismissedAnnouncements', JSON.stringify(newDismissedIds));
-    } catch (error) {
-      console.error('Error saving dismissed announcement:', error);
-    }
-  };
-
   const getTypeStyles = (type: Announcement['type']) => {
     switch (type) {
       case 'INFO':
         return {
-          bg: 'bg-blue-50 border-blue-200',
-          text: 'text-blue-900',
-          icon: <Info className="h-5 w-5 text-blue-600" />,
+          gradient: 'from-blue-500 via-blue-600 to-cyan-600',
+          icon: <Info className="h-6 w-6 text-white" />,
+          shadow: 'shadow-blue-500/30',
         };
       case 'WARNING':
         return {
-          bg: 'bg-yellow-50 border-yellow-200',
-          text: 'text-yellow-900',
-          icon: <AlertCircle className="h-5 w-5 text-yellow-600" />,
+          gradient: 'from-yellow-500 via-orange-500 to-red-500',
+          icon: <AlertCircle className="h-6 w-6 text-white" />,
+          shadow: 'shadow-orange-500/30',
         };
       case 'SUCCESS':
         return {
-          bg: 'bg-green-50 border-green-200',
-          text: 'text-green-900',
-          icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+          gradient: 'from-green-500 via-emerald-600 to-teal-600',
+          icon: <CheckCircle className="h-6 w-6 text-white" />,
+          shadow: 'shadow-green-500/30',
         };
       case 'ERROR':
         return {
-          bg: 'bg-red-50 border-red-200',
-          text: 'text-red-900',
-          icon: <XCircle className="h-5 w-5 text-red-600" />,
+          gradient: 'from-red-500 via-rose-600 to-pink-600',
+          icon: <XCircle className="h-6 w-6 text-white" />,
+          shadow: 'shadow-red-500/30',
         };
     }
   };
@@ -92,50 +68,60 @@ export function AnnouncementBanner() {
     return null;
   }
 
-  const visibleAnnouncements = announcements.filter(
-    (a) => !dismissedIds.includes(a.id)
-  );
-
-  if (visibleAnnouncements.length === 0) {
+  if (announcements.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-3 mb-6">
-      {visibleAnnouncements.map((announcement) => {
+    <div className="space-y-4 mb-6">
+      {announcements.map((announcement) => {
         const styles = getTypeStyles(announcement.type);
         return (
-          <Card
+          <div
             key={announcement.id}
-            className={`${styles.bg} border-2 shadow-sm`}
+            className={`relative rounded-xl overflow-hidden shadow-lg ${styles.shadow} hover:shadow-xl transition-shadow duration-300`}
           >
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">{styles.icon}</div>
+            {/* Gradient Background */}
+            <div className={`absolute inset-0 bg-gradient-to-r ${styles.gradient}`} />
+            
+            {/* Pattern Overlay */}
+            <div 
+              className="absolute inset-0 opacity-10"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
+            
+            {/* Content */}
+            <div className="relative p-6">
+              <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div className="flex-shrink-0 mt-1 bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                  {styles.icon}
+                </div>
                 
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-lg mb-1 ${styles.text}`}>
+                {/* Text Content */}
+                <div className="flex-1 min-w-0 text-white">
+                  <h3 className="font-bold text-xl mb-2 drop-shadow-lg">
                     {announcement.title}
                   </h3>
-                  <p className={`text-sm whitespace-pre-wrap ${styles.text} opacity-90`}>
+                  <p className="text-base leading-relaxed whitespace-pre-wrap drop-shadow-md opacity-95 mb-3">
                     {announcement.content}
                   </p>
-                  <p className="text-xs mt-2 opacity-70">
-                    — {announcement.author.fullName},{' '}
-                    {new Date(announcement.createdAt).toLocaleDateString('ru-RU')}
+                  <p className="text-xs opacity-80">
+                    👤 {announcement.author.fullName} • 📅 {new Date(announcement.createdAt).toLocaleDateString('ru-RU', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
                   </p>
                 </div>
-
-                <button
-                  onClick={() => handleDismiss(announcement.id)}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Закрыть"
-                >
-                  <X className="h-5 w-5" />
-                </button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Shine Effect */}
+            <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 animate-shine" />
+          </div>
         );
       })}
     </div>
