@@ -98,8 +98,6 @@ async function getRecentActivity() {
 }
 
 export default async function AdminDashboard() {
-  const session = await getServerSession(authOptions);
-  const isAdmin = session?.user?.role === 'ADMIN';
   const stats = await getAdminStats();
   const activity = await getRecentActivity();
 

@@ -7,9 +7,6 @@ import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'luci
 import { useSession } from 'next-auth/react';
 
 export function AdminWrapper({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === 'ADMIN';
-  
   const navItems = [
     { href: '/admin', label: 'Панель управления', icon: Home, adminOnly: false },
     { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: false },
