@@ -1,6 +1,7 @@
 'use client';
 
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { SessionProvider } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'lucide-react';
