@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
                   )}
 
                   {/* Role Management (ADMIN only) */}
-                  {user.status === 'APPROVED' && user.role !== 'ADMIN' && (
+                  {session?.user?.role === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
                     <>
                       {user.role === 'USER' && (
                         <Button

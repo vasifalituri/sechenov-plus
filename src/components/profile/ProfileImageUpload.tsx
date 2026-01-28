@@ -147,12 +147,14 @@ export function ProfileImageUpload({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
           <Button
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isDeleting}
+            className="touch-manipulation w-full sm:w-auto"
+            type="button"
           >
             <Camera className="w-4 h-4 mr-2" />
             {currentImage ? 'Изменить фото' : 'Загрузить фото'}
@@ -164,6 +166,8 @@ export function ProfileImageUpload({
               size="sm"
               onClick={handleDelete}
               disabled={isUploading || isDeleting}
+              className="touch-manipulation w-full sm:w-auto"
+              type="button"
             >
               {isDeleting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -178,8 +182,10 @@ export function ProfileImageUpload({
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/webp"
+          capture="environment"
           onChange={handleFileChange}
           className="hidden"
+          aria-label="Выбрать фото профиля"
         />
 
         <p className="text-xs text-muted-foreground text-center">
