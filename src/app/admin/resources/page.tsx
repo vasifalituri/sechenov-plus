@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +24,6 @@ interface ExternalResource {
 }
 
 export default function AdminResourcesPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [resources, setResources] = useState<ExternalResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -42,14 +38,8 @@ export default function AdminResourcesPage() {
   });
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (session?.user?.role !== 'ADMIN') {
-      router.push('/dashboard');
-    } else {
-      fetchResources();
-    }
-  }, [status, session, router]);
+    fetchResources();
+  }, []);
 
   const fetchResources = async () => {
     try {
