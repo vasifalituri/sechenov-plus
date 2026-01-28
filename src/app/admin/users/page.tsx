@@ -16,13 +16,16 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isReady, setIsReady] = useState(false);
 
   // Redirect if not ADMIN or MODERATOR
   useEffect(() => {
     if (status === 'loading') return;
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       router.push('/admin');
+      return;
     }
+    setIsReady(true);
   }, [session, status, router]);
 
   useEffect(() => {
@@ -113,11 +116,13 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  // Show loading until everything is ready
+  if (status === 'loading' || !isReady || isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
   }
 
-  if (!session) {
+  // Extra safety check
+  if (!session || !session.user || (!session.user.role)) {
     return null;
   }
 
