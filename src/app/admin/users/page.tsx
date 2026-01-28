@@ -125,8 +125,12 @@ export default function AdminUsersPage() {
     rejected: users.filter((u) => u.status === 'REJECTED').length,
   };
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return <div>Загрузка...</div>;
+  }
+
+  if (!session) {
+    return null;
   }
 
   return (
