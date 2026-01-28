@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubjectSelect } from '@/components/ui/subject-select';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE_USER = 10 * 1024 * 1024; // 10MB for regular users
+const MAX_FILE_SIZE_ADMIN = 500 * 1024 * 1024; // 500MB for admins
 const MAX_SUPABASE_SIZE = 10 * 1024 * 1024; // Use Supabase for files up to 10MB (Vercel has 4.5MB payload limit)
 
 const ALLOWED_TYPES = [
@@ -28,6 +29,10 @@ export function MaterialUploadForm() {
   const { data: session } = useSession();
   const [isUploading, setIsUploading] = useState(false);
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Determine max file size based on user role
+  const isAdmin = session?.user?.role === 'ADMIN';
+  const MAX_FILE_SIZE = isAdmin ? MAX_FILE_SIZE_ADMIN : MAX_FILE_SIZE_USER;
   
   const [formData, setFormData] = useState({
     title: '',
@@ -369,15 +374,32 @@ export function MaterialUploadForm() {
       </div>
 
       <div>
-        <Label htmlFor="file">Файл (PDF или DOCX, до 10MB) *</Label>
+        <Label htmlFor="file">
+          Файл (PDF или DOCX, до {isAdmin ? '500MB' : '10MB'}) *
+          {isAdmin && <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 font-semibold">Админ: увеличенный лимит</span>}
+        </Label>
         
         {/* Storage info */}
-        <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-800">
+        <div className={`mb-2 p-2 rounded-md text-xs border ${
+          isAdmin 
+            ? 'bg-cyan-50 border-cyan-200 text-cyan-900 dark:bg-cyan-900/20 dark:border-cyan-700 dark:text-cyan-100' 
+            : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-100'
+        }`}>
           <p className="font-medium mb-1">📦 Хранилище материалов:</p>
           <ul className="space-y-0.5 ml-4 list-disc">
-            <li>Все учебные материалы → Supabase Storage (1GB бесплатно)</li>
-            <li>Максимальный размер файла: 10MB</li>
-            <li>Загрузка напрямую с браузера (быстро и безопасно)</li>
+            {isAdmin ? (
+              <>
+                <li>Файлы до 10MB → Supabase Storage (быстро)</li>
+                <li>Файлы 10MB-500MB → MEGA Storage (для больших файлов)</li>
+                <li>Максимальный размер: 500MB (администраторский доступ)</li>
+              </>
+            ) : (
+              <>
+                <li>Все учебные материалы → Supabase Storage (1GB бесплатно)</li>
+                <li>Максимальный размер файла: 10MB</li>
+                <li>Загрузка напрямую с браузера (быстро и безопасно)</li>
+              </>
+            )}
           </ul>
         </div>
         

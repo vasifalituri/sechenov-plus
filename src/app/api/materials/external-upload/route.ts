@@ -20,12 +20,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Rate limiting: 5 large file uploads per day per user
+    // Rate limiting: Different limits for admins and regular users
+    const isAdmin = session.user.role === 'ADMIN';
     const identifier = getClientIdentifier(req, session.user.id);
     const rateLimitResult = await rateLimit(identifier, {
       interval: 24 * 60 * 60 * 1000, // 24 hours
       uniqueTokenPerInterval: 500,
-      maxRequests: 5,
+      maxRequests: isAdmin ? 50 : 5, // 50 uploads per day for admins, 5 for regular users
     });
     
     const rateLimitResponse = createRateLimitResponse(rateLimitResult);
@@ -40,8 +41,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Maximum file size: 10MB
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    // Maximum file size: 10MB for regular users, 500MB for admins
+    const MAX_SIZE = isAdmin ? 500 * 1024 * 1024 : 10 * 1024 * 1024; // 500MB for admins, 10MB for users
 
     // Validate content type
     const contentType = req.headers.get('content-type');
