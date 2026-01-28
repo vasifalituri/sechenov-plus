@@ -98,6 +98,11 @@ export default function AdminMaterialsPage() {
   const handleDownload = async (materialId: string, storageType: string) => {
     try {
       const response = await fetch(`/api/materials/download/${materialId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const contentType = response.headers.get('content-type');
       
       if (contentType && contentType.includes('application/json')) {
@@ -105,14 +110,26 @@ export default function AdminMaterialsPage() {
         const data = await response.json();
         if (data.success && data.externalUrl) {
           window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+        } else {
+          alert('Ошибка: не удалось получить ссылку для скачивания');
         }
       } else {
-        // Regular download
+        // Regular download - get filename from response headers or use from material data
+        const contentDisposition = response.headers.get('content-disposition');
+        let fileName = 'material';
+        
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (fileNameMatch && fileNameMatch[1]) {
+            fileName = fileNameMatch[1].replace(/['"]/g, '');
+          }
+        }
+        
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'material';
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -120,7 +137,7 @@ export default function AdminMaterialsPage() {
       }
     } catch (error) {
       console.error('Error downloading:', error);
-      alert('Ошибка при скачивании');
+      alert(`Ошибка при скачивании: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     }
   };
 

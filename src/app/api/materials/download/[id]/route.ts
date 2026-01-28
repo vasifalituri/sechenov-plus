@@ -23,8 +23,14 @@ export async function GET(
       where: { id },
     });
 
-    if (!material || material.status !== 'APPROVED') {
+    if (!material) {
       return NextResponse.json({ error: 'Material not found' }, { status: 404 });
+    }
+
+    // Allow admins to download any material, regular users only approved materials
+    const isAdmin = session.user.role === 'ADMIN';
+    if (!isAdmin && material.status !== 'APPROVED') {
+      return NextResponse.json({ error: 'Material not available' }, { status: 403 });
     }
 
     // Track unique download (one per user per material)
