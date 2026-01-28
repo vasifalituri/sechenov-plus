@@ -26,6 +26,7 @@ export async function GET(
             fullName: true,
             academicYear: true,
             profileImage: true,
+            role: true,
           },
         },
         votes: {
@@ -45,6 +46,7 @@ export async function GET(
                 fullName: true,
                 academicYear: true,
                 profileImage: true,
+                role: true,
               },
             },
             votes: {
@@ -61,6 +63,7 @@ export async function GET(
                     fullName: true,
                     academicYear: true,
                     profileImage: true,
+                    role: true,
                   },
                 },
                 votes: {
@@ -77,6 +80,7 @@ export async function GET(
                         fullName: true,
                         academicYear: true,
                         profileImage: true,
+                        role: true,
                       },
                     },
                     votes: {

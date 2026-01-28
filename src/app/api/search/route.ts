@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
               fullName: true,
               username: true,
               profileImage: true,
+              role: true,
             },
           },
           subject: {

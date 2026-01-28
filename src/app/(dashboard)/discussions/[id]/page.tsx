@@ -211,7 +211,11 @@ export default function DiscussionDetailPage({
 
               <div className="flex items-center gap-4 pt-4 border-t text-sm text-muted-foreground">
                 <Link href={`/users/${thread.author.username}`}>
-                  <span className="font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
+                  <span className={`font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer ${
+                    thread.author.role === 'ADMIN' 
+                      ? 'text-cyan-600 dark:text-cyan-400' 
+                      : ''
+                  }`}>
                     @{thread.author.username}
                   </span>
                 </Link>

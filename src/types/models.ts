@@ -21,6 +21,7 @@ export interface Author {
   fullName: string;
   academicYear: number;
   profileImage?: string | null;
+  role?: 'USER' | 'ADMIN';
 }
 
 // Subject types

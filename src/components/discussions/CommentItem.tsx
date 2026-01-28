@@ -127,7 +127,11 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
                 {comment.author.fullName?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <span className="font-semibold text-xs hover:underline">
+            <span className={`font-semibold text-xs hover:underline ${
+              comment.author.role === 'ADMIN' 
+                ? 'text-cyan-600 dark:text-cyan-400' 
+                : ''
+            }`}>
               @{comment.author.username}
             </span>
           </Link>

@@ -104,7 +104,11 @@ export const DiscussionCard = memo(function DiscussionCard({ discussion }: Discu
               <Link 
                 href={`/users/${discussion.author.username}`} 
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400"
+                className={`flex items-center gap-1.5 text-xs hover:text-blue-600 dark:hover:text-blue-400 ${
+                  discussion.author.role === 'ADMIN' 
+                    ? 'text-cyan-600 dark:text-cyan-400 font-semibold' 
+                    : 'text-muted-foreground'
+                }`}
               >
                 <Avatar className="w-5 h-5">
                   <AvatarImage src={discussion.author.profileImage || undefined} alt={discussion.author.fullName} />

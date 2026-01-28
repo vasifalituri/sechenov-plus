@@ -232,7 +232,9 @@ export default async function HomePage() {
                       <div className="flex-1">
                         <h4 className="font-medium text-sm line-clamp-1">{thread.title}</h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                          <span>@{thread.author.username}</span>
+                          <span className={thread.author.role === 'ADMIN' ? 'text-cyan-600 dark:text-cyan-400 font-semibold' : ''}>
+                            @{thread.author.username}
+                          </span>
                           <span>•</span>
                           <span>{thread.subject.name}</span>
                           {thread.score > 0 && (

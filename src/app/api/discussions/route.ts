@@ -81,6 +81,7 @@ export async function GET(req: Request) {
             fullName: true,
             academicYear: true,
             profileImage: true,
+            role: true,
           },
         },
         votes: {

@@ -61,9 +61,12 @@ export async function POST(
       include: {
         author: {
           select: {
+            id: true,
+            username: true,
             fullName: true,
             academicYear: true,
             profileImage: true,
+            role: true,
           },
         },
       },
