@@ -182,7 +182,6 @@ export function ProfileImageUpload({
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/webp"
-          {...({ capture: 'environment' } as any)}
           onChange={handleFileChange}
           className="hidden"
           aria-label="Выбрать фото профиля"
