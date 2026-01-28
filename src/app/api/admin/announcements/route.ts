@@ -57,17 +57,23 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    console.log('📝 POST /api/admin/announcements - Start');
     const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.role !== 'ADMIN') {
+      console.log('❌ Access denied - not admin');
       return NextResponse.json(
         { error: 'Доступ запрещен' },
         { status: 403 }
       );
     }
 
+    console.log('👤 Admin user:', session.user.id);
     const body = await req.json();
+    console.log('📦 Request body:', body);
+    
     const validatedData = createSchema.parse(body);
+    console.log('✅ Validation passed:', validatedData);
 
     const announcement = await prisma.announcement.create({
       data: {
@@ -89,21 +95,23 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log('✅ Announcement created:', announcement.id);
     return NextResponse.json({
       success: true,
       announcement,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('❌ Validation error:', error.errors);
       return NextResponse.json(
         { error: 'Неверные данные', details: error.errors },
         { status: 400 }
       );
     }
 
-    console.error('Error creating announcement:', error);
+    console.error('❌ Error creating announcement:', error);
     return NextResponse.json(
-      { error: 'Ошибка создания объявления' },
+      { error: 'Ошибка создания объявления', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

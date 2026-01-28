@@ -11,7 +11,7 @@ const updateSchema = z.object({
   type: z.enum(['INFO', 'WARNING', 'SUCCESS', 'ERROR']).optional(),
   priority: z.number().int().min(0).max(100).optional(),
   isActive: z.boolean().optional(),
-  expiresAt: z.string().nullable().optional(),
+  expiresAt: z.string().nullable().optional().transform(val => val === '' ? null : val),
 });
 
 export async function PATCH(
