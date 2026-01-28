@@ -60,18 +60,18 @@ export default async function DiscussionsPage() {
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Обсуждения</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">Обсуждения</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
             Делитесь опытом и задавайте вопросы 💬
           </p>
         </div>
-        <Link href="/discussions/new">
-          <Button>
+        <Link href="/discussions/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
-            Создать тему
+            <span className="sm:inline">Создать тему</span>
           </Button>
         </Link>
       </div>

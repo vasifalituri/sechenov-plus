@@ -50,17 +50,19 @@ export const DiscussionsList = memo(function DiscussionsList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <DiscussionFilters
-          sort={sort}
-          selectedSubject={selectedSubject}
-          subjects={subjects}
-          onSortChange={setSort}
-          onSubjectChange={setSelectedSubject}
-        />
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex-1">
+          <DiscussionFilters
+            sort={sort}
+            selectedSubject={selectedSubject}
+            subjects={subjects}
+            onSortChange={setSort}
+            onSubjectChange={setSelectedSubject}
+          />
+        </div>
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          <span className="text-xs text-muted-foreground">
+            {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
           </span>
           <Button
             variant="outline"
@@ -68,6 +70,7 @@ export const DiscussionsList = memo(function DiscussionsList({
             onClick={fetchDiscussions}
             disabled={isLoading}
             title="Обновить список"
+            className="flex-shrink-0"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>

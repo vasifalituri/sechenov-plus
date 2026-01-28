@@ -113,12 +113,12 @@ export default async function HomePage() {
   const transformedTopThreads = transformThreads(topThreads);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
       {/* Global Search Bar */}
-      <Card className="p-6">
-        <div className="flex flex-col space-y-3">
-          <h2 className="text-xl font-semibold">🔍 Поиск по всему сайту</h2>
-          <p className="text-sm text-muted-foreground">
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col space-y-2 sm:space-y-3">
+          <h2 className="text-lg sm:text-xl font-semibold">🔍 Поиск по всему сайту</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Найдите материалы, обсуждения или пользователей
           </p>
           <div className="w-full">
@@ -131,7 +131,7 @@ export default async function HomePage() {
       <AnnouncementBanner />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Материалы</CardTitle>

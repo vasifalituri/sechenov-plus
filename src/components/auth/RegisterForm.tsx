@@ -248,7 +248,7 @@ export function RegisterForm() {
   // Success state
   if (success) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mx-3 sm:mx-0">
         <CardHeader>
           <div className="flex items-center justify-center mb-4">
             <div className="bg-green-100 p-4 rounded-full">

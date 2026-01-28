@@ -44,10 +44,10 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md mx-3 sm:mx-0">
       <CardHeader>
-        <CardTitle className="text-2xl">Вход</CardTitle>
-        <CardDescription>
+        <CardTitle>Вход</CardTitle>
+        <CardDescription className="text-sm">
           Войдите в свою учетную запись для доступа к платформе
         </CardDescription>
       </CardHeader>

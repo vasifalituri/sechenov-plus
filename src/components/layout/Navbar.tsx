@@ -29,10 +29,10 @@ export function Navbar() {
 
   return (
     <nav className="border-b bg-white dark:bg-gray-900 dark:border-gray-800 sticky top-0 z-50 transition-colors">
-      <div className="container mx-auto px-4" suppressHydrationWarning>
-        <div className="flex items-center justify-between h-16" suppressHydrationWarning>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6" suppressHydrationWarning>
+        <div className="flex items-center justify-between h-14 sm:h-16" suppressHydrationWarning>
           {/* Logo */}
-          <Link href="/dashboard" className="font-bold text-xl text-blue-600 dark:text-blue-400 flex-shrink-0">
+          <Link href="/dashboard" className="font-bold text-lg sm:text-xl text-blue-600 dark:text-blue-400 flex-shrink-0">
             Sechenov+
           </Link>
           
@@ -107,7 +107,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile Actions */}
-          <div className="flex md:hidden items-center space-x-2" suppressHydrationWarning>
+          <div className="flex md:hidden items-center space-x-1" suppressHydrationWarning>
             <NotificationBell />
             <ThemeToggle />
             <MobileMenu />

@@ -59,33 +59,36 @@ export function MaterialsPageClient({ initialMaterials, subjects }: MaterialsPag
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Учебные материалы</h1>
-          <p className="text-muted-foreground mt-2">
-            Скачивайте и делитесь учебными материалами для подготовки к экзаменам
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title="Обновить список"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-          <Link href="/materials/upload">
-            <Button>
-              <Upload className="w-4 h-4 mr-2" />
-              Загрузить материал
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold">Учебные материалы</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
+              Скачивайте и делитесь учебными материалами для подготовки к экзаменам
+            </p>
+          </div>
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            <span className="text-xs text-muted-foreground">
+              {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Обновить список"
+              className="flex-shrink-0"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
-          </Link>
+            <Link href="/materials/upload" className="flex-shrink-0">
+              <Button size="sm" className="w-full sm:w-auto">
+                <Upload className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Загрузить материал</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
