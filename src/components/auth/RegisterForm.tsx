@@ -174,7 +174,7 @@ export function RegisterForm() {
   // Email verification form
   if (showVerification && !success) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mx-3 sm:mx-0">
         <CardHeader>
           <div className="flex items-center justify-center mb-4">
             <div className="bg-primary/10 p-4 rounded-full">
