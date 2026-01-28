@@ -32,8 +32,16 @@ export function DownloadButton({
         const data = await response.json();
         
         if (data.success && data.downloadType === 'EXTERNAL_MEGA') {
-          // Open MEGA page in new tab
-          window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+          // Detect mobile device
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // On mobile, use location.href for better compatibility
+            window.location.href = data.externalUrl;
+          } else {
+            // On desktop, open in new tab
+            window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+          }
         } else {
           console.error('Unexpected response:', data);
           alert('Ошибка при скачивании файла');
