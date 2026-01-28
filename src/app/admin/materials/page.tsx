@@ -110,7 +110,16 @@ export default function AdminMaterialsPage() {
         // MEGA file - open in new tab
         const data = await response.json();
         if (data.success && data.externalUrl) {
-          window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+          // Detect mobile device
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // On mobile, use location.href for better compatibility
+            window.location.href = data.externalUrl;
+          } else {
+            // On desktop, open in new tab
+            window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
+          }
         } else {
           alert('Ошибка: не удалось получить ссылку для скачивания');
         }
