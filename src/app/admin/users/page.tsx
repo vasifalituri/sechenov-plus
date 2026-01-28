@@ -113,6 +113,14 @@ export default function AdminUsersPage() {
     }
   };
 
+  if (status === 'loading' || isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
+  }
+
+  if (!session) {
+    return null;
+  }
+
   const filteredUsers = users.filter((user) => {
     if (filter === 'ALL') return true;
     return user.status === filter;
@@ -124,14 +132,6 @@ export default function AdminUsersPage() {
     approved: users.filter((u) => u.status === 'APPROVED').length,
     rejected: users.filter((u) => u.status === 'REJECTED').length,
   };
-
-  if (status === 'loading' || isLoading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (!session) {
-    return null;
-  }
 
   return (
     <div className="space-y-6">
@@ -259,7 +259,7 @@ export default function AdminUsersPage() {
                   )}
 
                   {/* Role Management (ADMIN only) */}
-                  {session?.user?.role === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
+                  {session && session.user && session.user.role === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
                     <>
                       {user.role === 'USER' && (
                         <Button
