@@ -1,27 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
-import Link from 'next/link';
 
 interface ExternalResource {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   url: string;
-  type: string;
   icon: string;
-  active: boolean;
+  order: number;
 }
 
 async function getExternalResources(): Promise<ExternalResource[]> {
   try {
-    const fs = require('fs');
-    const path = require('path');
-    const filePath = path.join(process.cwd(), 'public', 'external-resources.json');
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const resources = JSON.parse(fileContent);
-    return resources.filter((r: ExternalResource) => r.active);
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/resources`, {
+      cache: 'no-store', // Always fetch fresh data
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch resources');
+    }
+    
+    const data = await response.json();
+    return data.success ? data.data : [];
   } catch (error) {
     console.error('Failed to load external resources:', error);
     return [];
@@ -54,14 +56,11 @@ export default async function ResourcesPage() {
           {resources.map((resource) => (
             <Card key={resource.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="text-4xl mb-2">{resource.icon}</div>
-                  <Badge variant="outline" className="capitalize">
-                    {resource.type}
-                  </Badge>
-                </div>
+                <div className="text-4xl mb-2">{resource.icon}</div>
                 <CardTitle className="text-lg">{resource.title}</CardTitle>
-                <CardDescription>{resource.description}</CardDescription>
+                {resource.description && (
+                  <CardDescription>{resource.description}</CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 <a
@@ -83,23 +82,19 @@ export default async function ResourcesPage() {
 
       <Card className="bg-muted/50">
         <CardHeader>
-          <CardTitle className="text-lg">💡 Как добавить ресурс?</CardTitle>
+          <CardTitle className="text-lg">💡 Информация</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
+        <CardContent className="text-sm text-muted-foreground">
           <p>
-            <strong>Для администраторов:</strong> Отредактируйте файл{' '}
-            <code className="bg-muted px-2 py-1 rounded">public/external-resources.json</code>
+            Здесь вы найдете полезные ссылки на внешние ресурсы: Google Drive, Яндекс.Диск, 
+            облачные хранилища с дополнительными материалами для обучения.
           </p>
-          <p>Добавьте новый объект со следующими полями:</p>
-          <ul className="list-disc ml-5 space-y-1">
-            <li><code>id</code>: уникальный идентификатор</li>
-            <li><code>title</code>: название ресурса</li>
-            <li><code>description</code>: краткое описание</li>
-            <li><code>url</code>: ссылка на ресурс</li>
-            <li><code>type</code>: тип (yandex, mega, google, telegram, vk, и т.д.)</li>
-            <li><code>icon</code>: эмодзи для иконки</li>
-            <li><code>active</code>: true или false</li>
-          </ul>
+          <p className="mt-2">
+            <strong>Для администраторов:</strong> управление ресурсами доступно в{' '}
+            <a href="/admin/resources" className="text-blue-600 hover:underline">
+              панели администратора
+            </a>
+          </p>
         </CardContent>
       </Card>
     </div>

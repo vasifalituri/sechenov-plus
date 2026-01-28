@@ -16,7 +16,8 @@ import {
   LayoutDashboard, 
   Mail,
   Shield,
-  Bookmark
+  Bookmark,
+  Link as LinkIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -48,6 +49,7 @@ export function MobileMenu() {
     { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
     { href: '/materials', label: 'Материалы', icon: BookOpen },
     { href: '/discussions', label: 'Обсуждения', icon: MessageSquare },
+    { href: '/resources', label: 'Ресурсы', icon: LinkIcon },
     { href: '/bookmarks', label: 'Избранное', icon: Bookmark },
     { href: '/messages', label: 'Сообщения', icon: Mail, badge: unreadCount },
   ];

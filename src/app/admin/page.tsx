@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, FileText, MessageSquare, Clock } from 'lucide-react';
+import { Users, FileText, MessageSquare, Clock, Link as LinkIcon } from 'lucide-react';
+import Link from 'next/link';
 
 async function getAdminStats() {
   const [
@@ -149,6 +150,65 @@ export default async function AdminDashboard() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link href="/admin/users">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Управление пользователями
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/materials">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Материалы</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Модерация материалов
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/discussions">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Обсуждения</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Модерация обсуждений
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/resources">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ресурсы</CardTitle>
+              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Управление внешними ссылками
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Pending Items */}

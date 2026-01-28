@@ -80,6 +80,7 @@ model User {
   downloads            MaterialDownload[]
   verificationCodes    VerificationCode[]
   announcements        Announcement[]     @relation("AnnouncementAuthor")
+  externalResources    ExternalResource[] @relation("ResourceCreator")
 
   @@index([email])
   @@index([username])
@@ -379,4 +380,28 @@ enum AnnouncementType {
   WARNING // Yellow - important notices
   SUCCESS // Green - positive news
   ERROR   // Red - critical alerts
+}
+
+// External Resources (e.g., Google Drive, Yandex Disk links)
+model ExternalResource {
+  id          String   @id @default(cuid())
+  title       String   // Resource title (e.g., "Лекции по анатомии")
+  description String?  @db.Text // Optional description
+  url         String   // Link to external resource (Google Drive, Yandex Disk, etc.)
+  icon        String   @default("🔗") // Emoji icon for display
+  order       Int      @default(0) // Display order (lower = shown first)
+  isActive    Boolean  @default(true) // Only active resources are shown
+
+  // Author
+  authorId String
+  author   User   @relation("ResourceCreator", fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+  @@index([authorId])
+  @@map("external_resources")
 }
