@@ -4,16 +4,20 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export function AdminWrapper({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === 'ADMIN';
+  
   const navItems = [
-    { href: '/admin', label: 'Панель управления', icon: Home },
-    { href: '/admin/users', label: 'Пользователи', icon: Users },
-    { href: '/admin/materials', label: 'Материалы', icon: FileText },
-    { href: '/admin/discussions', label: 'Обсуждения', icon: MessageSquare },
-    { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3 },
-    { href: '/admin/announcements', label: 'Объявления', icon: Megaphone },
-  ];
+    { href: '/admin', label: 'Панель управления', icon: Home, adminOnly: false },
+    { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: true },
+    { href: '/admin/materials', label: 'Материалы', icon: FileText, adminOnly: false },
+    { href: '/admin/discussions', label: 'Обсуждения', icon: MessageSquare, adminOnly: false },
+    { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3, adminOnly: false },
+    { href: '/admin/announcements', label: 'Объявления', icon: Megaphone, adminOnly: false },
+  ].filter(item => !item.adminOnly || isAdmin);
 
   return (
     <ThemeProvider>

@@ -6,12 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
 import { Check, X, Trash2, Mail, MailCheck, RefreshCw } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminUsersPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Redirect if not ADMIN (only ADMIN can manage users, not MODERATOR)
+  useEffect(() => {
+    if (status === 'loading') return;
+    if (!session || session.user.role !== 'ADMIN') {
+      router.push('/admin');
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
     fetchUsers();
