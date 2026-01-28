@@ -126,35 +126,6 @@ export default async function HomePage() {
         </div>
       </Card>
 
-      {/* Welcome Section with Background Image */}
-      <div className="relative rounded-lg p-8 text-white shadow-lg overflow-hidden min-h-[200px]">
-        {/* Background Image with Opacity */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: 'url(/images/background.jpg)',
-            opacity: 0.35,
-            zIndex: 0,
-          }}
-        />
-        
-        {/* Gradient Overlay */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 dark:from-orange-600 dark:to-red-600"
-          style={{ opacity: 0.75, zIndex: 1 }}
-        />
-        
-        {/* Content */}
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">
-            👋 Привет, {session?.user?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-orange-100 dark:text-orange-200 text-lg max-w-2xl">
-            Добро пожаловать на Sechenov+ — место, где студенты помогают друг другу готовиться к экзаменам 📚
-          </p>
-        </div>
-      </div>
-
       {/* Announcements */}
       <AnnouncementBanner />
 
