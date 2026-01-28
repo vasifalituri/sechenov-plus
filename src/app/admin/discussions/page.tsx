@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
 import { Check, X, Trash2, Pin } from 'lucide-react';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
+import Link from 'next/link';
 
 export default function AdminDiscussionsPage() {
   const [threads, setThreads] = useState<any[]>([]);
@@ -164,7 +166,23 @@ export default function AdminDiscussionsPage() {
                     {thread.content}
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Автор: {thread.author.fullName}</span>
+                    <span className="flex items-center gap-1">
+                      Автор:{' '}
+                      {thread.author.username ? (
+                        <Link href={`/users/${thread.author.username}`} className="flex items-center gap-1" target="_blank">
+                          {getStaffBadge(thread.author.role) && (
+                            <span className="text-xs" title={getStaffBadge(thread.author.role)?.label}>
+                              {getStaffBadge(thread.author.role)?.icon}
+                            </span>
+                          )}
+                          <span className={`hover:underline font-medium ${getStaffColorClass(thread.author.role) || 'text-blue-600 dark:text-blue-400'}`}>
+                            {thread.author.fullName}
+                          </span>
+                        </Link>
+                      ) : (
+                        <span>{thread.author.fullName}</span>
+                      )}
+                    </span>
                     <span>•</span>
                     <span>Комментариев: {thread._count.comments}</span>
                     <span>•</span>

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, MessageSquare, Clock, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 async function getAdminStats() {
   const [
@@ -51,6 +52,8 @@ async function getRecentActivity() {
         email: true,
         academicYear: true,
         createdAt: true,
+        username: true,
+        role: true,
       },
     }),
     prisma.material.findMany({
@@ -62,7 +65,11 @@ async function getRecentActivity() {
         title: true,
         createdAt: true,
         uploadedBy: {
-          select: { fullName: true },
+          select: { 
+            fullName: true,
+            username: true,
+            role: true,
+          },
         },
       },
     }),
@@ -75,7 +82,11 @@ async function getRecentActivity() {
         title: true,
         createdAt: true,
         author: {
-          select: { fullName: true },
+          select: { 
+            fullName: true,
+            username: true,
+            role: true,
+          },
         },
       },
     }),
@@ -249,8 +260,22 @@ export default async function AdminDashboard() {
                 {activity.recentMaterials.map((material) => (
                   <div key={material.id} className="text-sm">
                     <p className="font-medium">{material.title}</p>
-                    <p className="text-muted-foreground text-xs">
-                      от {material.uploadedBy.fullName}
+                    <p className="text-muted-foreground text-xs flex items-center gap-1">
+                      от{' '}
+                      {material.uploadedBy.username ? (
+                        <Link href={`/users/${material.uploadedBy.username}`} className="flex items-center gap-1" target="_blank">
+                          {getStaffBadge(material.uploadedBy.role) && (
+                            <span className="text-xs" title={getStaffBadge(material.uploadedBy.role)?.label}>
+                              {getStaffBadge(material.uploadedBy.role)?.icon}
+                            </span>
+                          )}
+                          <span className={`hover:underline font-medium ${getStaffColorClass(material.uploadedBy.role) || 'text-blue-600 dark:text-blue-400'}`}>
+                            {material.uploadedBy.fullName}
+                          </span>
+                        </Link>
+                      ) : (
+                        <span>{material.uploadedBy.fullName}</span>
+                      )}
                     </p>
                   </div>
                 ))}
@@ -272,8 +297,22 @@ export default async function AdminDashboard() {
                 {activity.recentThreads.map((thread) => (
                   <div key={thread.id} className="text-sm">
                     <p className="font-medium">{thread.title}</p>
-                    <p className="text-muted-foreground text-xs">
-                      от {thread.author.fullName}
+                    <p className="text-muted-foreground text-xs flex items-center gap-1">
+                      от{' '}
+                      {thread.author.username ? (
+                        <Link href={`/users/${thread.author.username}`} className="flex items-center gap-1" target="_blank">
+                          {getStaffBadge(thread.author.role) && (
+                            <span className="text-xs" title={getStaffBadge(thread.author.role)?.label}>
+                              {getStaffBadge(thread.author.role)?.icon}
+                            </span>
+                          )}
+                          <span className={`hover:underline font-medium ${getStaffColorClass(thread.author.role) || 'text-blue-600 dark:text-blue-400'}`}>
+                            {thread.author.fullName}
+                          </span>
+                        </Link>
+                      ) : (
+                        <span>{thread.author.fullName}</span>
+                      )}
                     </p>
                   </div>
                 ))}

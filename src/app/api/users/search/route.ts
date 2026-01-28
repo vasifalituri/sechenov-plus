@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         username: true,
         fullName: true,
         academicYear: true,
+        role: true,
       },
       take: 10, // Limit to 10 results
       orderBy: {

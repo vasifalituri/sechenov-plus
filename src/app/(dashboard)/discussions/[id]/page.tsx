@@ -14,6 +14,7 @@ import { VoteButtons } from '@/components/discussions/VoteButtons';
 import { ArrowLeft, MessageCircle, Pin, Trash2 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 export default function DiscussionDetailPage({
   params,
@@ -210,12 +211,13 @@ export default function DiscussionDetailPage({
               <p className="text-base whitespace-pre-wrap leading-relaxed">{thread.content}</p>
 
               <div className="flex items-center gap-4 pt-4 border-t text-sm text-muted-foreground">
-                <Link href={`/users/${thread.author.username}`}>
-                  <span className={`font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer ${
-                    thread.author.role === 'ADMIN' 
-                      ? 'text-cyan-600 dark:text-cyan-400' 
-                      : ''
-                  }`}>
+                <Link href={`/users/${thread.author.username}`} className="flex items-center gap-1.5">
+                  {getStaffBadge(thread.author.role) && (
+                    <span className="text-sm" title={getStaffBadge(thread.author.role)?.label}>
+                      {getStaffBadge(thread.author.role)?.icon}
+                    </span>
+                  )}
+                  <span className={`font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer ${getStaffColorClass(thread.author.role)}`}>
                     @{thread.author.username}
                   </span>
                 </Link>

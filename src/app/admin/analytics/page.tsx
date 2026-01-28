@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, MessageSquare, TrendingUp, Download } from 'lucide-react';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
+import Link from 'next/link';
 
 async function getAnalytics() {
   const [
@@ -33,7 +35,11 @@ async function getAnalytics() {
       include: {
         subject: true,
         uploadedBy: {
-          select: { fullName: true },
+          select: { 
+            fullName: true,
+            username: true,
+            role: true,
+          },
         },
       },
     }),
@@ -170,8 +176,22 @@ export default async function AnalyticsPage() {
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium">{material.title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {material.subject.name} • {material.academicYear} курс • {material.uploadedBy.fullName}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    {material.subject.name} • {material.academicYear} курс •{' '}
+                    {material.uploadedBy.username ? (
+                      <Link href={`/users/${material.uploadedBy.username}`} className="flex items-center gap-1" target="_blank">
+                        {getStaffBadge(material.uploadedBy.role) && (
+                          <span className="text-xs" title={getStaffBadge(material.uploadedBy.role)?.label}>
+                            {getStaffBadge(material.uploadedBy.role)?.icon}
+                          </span>
+                        )}
+                        <span className={`hover:underline font-medium ${getStaffColorClass(material.uploadedBy.role) || 'text-blue-600 dark:text-blue-400'}`}>
+                          {material.uploadedBy.fullName}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span>{material.uploadedBy.fullName}</span>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">

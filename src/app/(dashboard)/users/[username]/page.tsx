@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Mail, User, Calendar, BookOpen, MessageSquare } from 'lucide-react';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 export default function UserProfilePage({
   params,
@@ -83,7 +84,16 @@ export default function UserProfilePage({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-3xl font-bold">@{user.username}</h1>
+                  <div className="flex items-center gap-2">
+                    {getStaffBadge(user.role) && (
+                      <span className="text-2xl" title={getStaffBadge(user.role)?.label}>
+                        {getStaffBadge(user.role)?.icon}
+                      </span>
+                    )}
+                    <h1 className={`text-3xl font-bold ${getStaffColorClass(user.role)}`}>
+                      @{user.username}
+                    </h1>
+                  </div>
                   <p className="text-muted-foreground">{user.fullName}</p>
                 </div>
               </div>
@@ -97,7 +107,10 @@ export default function UserProfilePage({
                   {user.status === 'APPROVED' ? 'Активен' : user.status}
                 </Badge>
                 {user.role === 'ADMIN' && (
-                  <Badge variant="destructive">Администратор</Badge>
+                  <Badge variant="destructive">👑 Администратор</Badge>
+                )}
+                {user.role === 'MODERATOR' && (
+                  <Badge variant="destructive">⭐ Модератор</Badge>
                 )}
               </div>
             </div>

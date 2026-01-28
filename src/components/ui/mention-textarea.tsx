@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 interface User {
   id: string;
   username: string;
   fullName: string;
   academicYear: number;
+  role?: string;
 }
 
 interface MentionTextareaProps {
@@ -164,7 +166,16 @@ export function MentionTextarea({
               )}
             >
               <div>
-                <div className="font-medium text-sm">@{user.username}</div>
+                <div className="font-medium text-sm flex items-center gap-1">
+                  {getStaffBadge(user.role as any) && (
+                    <span className="text-xs" title={getStaffBadge(user.role as any)?.label}>
+                      {getStaffBadge(user.role as any)?.icon}
+                    </span>
+                  )}
+                  <span className={getStaffColorClass(user.role as any) || ''}>
+                    @{user.username}
+                  </span>
+                </div>
                 <div className="text-xs text-muted-foreground">{user.fullName}</div>
               </div>
               <div className="text-xs text-muted-foreground">{user.academicYear} курс</div>

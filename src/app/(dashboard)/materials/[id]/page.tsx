@@ -9,6 +9,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { DownloadButton } from '@/components/materials/DownloadButton';
 import { FileText, ArrowLeft } from 'lucide-react';
 import { formatDate, formatFileSize } from '@/lib/utils';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 async function getMaterial(id: string) {
   return prisma.material.findUnique({
@@ -84,12 +85,13 @@ export default async function MaterialDetailPage({
             <div suppressHydrationWarning>
               <p className="text-sm text-muted-foreground">Загрузил</p>
               {material.uploadedBy.username ? (
-                <Link href={`/users/${material.uploadedBy.username}`}>
-                  <p className={`font-medium hover:underline cursor-pointer ${
-                    material.uploadedBy.role === 'ADMIN' 
-                      ? 'text-cyan-600 dark:text-cyan-400' 
-                      : 'text-blue-600 dark:text-blue-400'
-                  }`}>
+                <Link href={`/users/${material.uploadedBy.username}`} className="flex items-center gap-1.5">
+                  {getStaffBadge(material.uploadedBy.role) && (
+                    <span className="text-sm" title={getStaffBadge(material.uploadedBy.role)?.label}>
+                      {getStaffBadge(material.uploadedBy.role)?.icon}
+                    </span>
+                  )}
+                  <p className={`font-medium hover:underline cursor-pointer ${getStaffColorClass(material.uploadedBy.role) || 'text-blue-600 dark:text-blue-400'}`}>
                     @{material.uploadedBy.username}
                   </p>
                 </Link>

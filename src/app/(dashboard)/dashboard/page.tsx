@@ -8,6 +8,7 @@ import { BookOpen, MessageSquare, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { AnnouncementBanner } from '@/components/shared/AnnouncementBanner';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 async function getStats() {
   const [materialsCount, threadsCount, usersCount] = await Promise.all([
@@ -232,7 +233,12 @@ export default async function HomePage() {
                       <div className="flex-1">
                         <h4 className="font-medium text-sm line-clamp-1">{thread.title}</h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                          <span className={thread.author.role === 'ADMIN' ? 'text-cyan-600 dark:text-cyan-400 font-semibold' : ''}>
+                          {getStaffBadge(thread.author.role) && (
+                            <span className="text-xs" title={getStaffBadge(thread.author.role)?.label}>
+                              {getStaffBadge(thread.author.role)?.icon}
+                            </span>
+                          )}
+                          <span className={`font-semibold ${getStaffColorClass(thread.author.role)}`}>
                             @{thread.author.username}
                           </span>
                           <span>•</span>

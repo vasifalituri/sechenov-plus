@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Send, Mail, Loader2, Search } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 interface Message {
   id: string;
@@ -23,11 +24,13 @@ interface Message {
     id: string;
     username: string;
     fullName: string;
+    role?: string;
   };
   receiver: {
     id: string;
     username: string;
     fullName: string;
+    role?: string;
   };
 }
 
@@ -35,6 +38,7 @@ interface Conversation {
   userId: string;
   username: string;
   fullName: string;
+  role?: string;
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
@@ -212,7 +216,14 @@ export default function MessagesPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-sm">@{user.username}</p>
+                        <div className="flex items-center gap-1">
+                          {getStaffBadge(user.role as any) && (
+                            <span className="text-xs" title={getStaffBadge(user.role as any)?.label}>
+                              {getStaffBadge(user.role as any)?.icon}
+                            </span>
+                          )}
+                          <p className={`font-medium text-sm ${getStaffColorClass(user.role as any) || ''}`}>@{user.username}</p>
+                        </div>
                         <p className="text-xs text-muted-foreground">{user.fullName}</p>
                         <p className="text-xs text-muted-foreground">{user.academicYear} курс</p>
                       </div>
@@ -249,10 +260,17 @@ export default function MessagesPage() {
                   <div className="flex items-start justify-between mb-1">
                     <Link 
                       href={`/users/${conv.username}`}
-                      className="font-medium text-sm hover:underline"
+                      className="flex items-center gap-1 font-medium text-sm hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      @{conv.username}
+                      {getStaffBadge(conv.role as any) && (
+                        <span className="text-xs" title={getStaffBadge(conv.role as any)?.label}>
+                          {getStaffBadge(conv.role as any)?.icon}
+                        </span>
+                      )}
+                      <span className={getStaffColorClass(conv.role as any) || ''}>
+                        @{conv.username}
+                      </span>
                     </Link>
                     {conv.unreadCount > 0 && (
                       <Badge variant="destructive" className="text-xs">

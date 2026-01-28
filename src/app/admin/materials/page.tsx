@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatFileSize, getStatusLabel, getStatusColor } from '@/lib/utils';
 import { Check, X, Trash2, Download, Cloud, HardDrive, ExternalLink, RefreshCw } from 'lucide-react';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 export default function AdminMaterialsPage() {
   const [materials, setMaterials] = useState<any[]>([]);
@@ -247,19 +248,22 @@ export default function AdminMaterialsPage() {
                     {material.description || 'Без описания'}
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>
+                    <span className="flex items-center gap-1">
                       Загрузил:{' '}
                       <a 
                         href={`/users/${material.uploadedBy.username}`}
-                        className={`hover:underline font-medium ${
-                          material.uploadedBy.role === 'ADMIN' 
-                            ? 'text-cyan-600 dark:text-cyan-400' 
-                            : 'text-blue-600 dark:text-blue-400'
-                        }`}
+                        className="flex items-center gap-1"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        @{material.uploadedBy.username}
+                        {getStaffBadge(material.uploadedBy.role) && (
+                          <span className="text-xs" title={getStaffBadge(material.uploadedBy.role)?.label}>
+                            {getStaffBadge(material.uploadedBy.role)?.icon}
+                          </span>
+                        )}
+                        <span className={`hover:underline font-medium ${getStaffColorClass(material.uploadedBy.role) || 'text-blue-600 dark:text-blue-400'}`}>
+                          @{material.uploadedBy.username}
+                        </span>
                       </a>
                     </span>
                     <span>•</span>

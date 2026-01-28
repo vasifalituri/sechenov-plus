@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
               fullName: true,
               username: true,
               profileImage: true,
+              role: true,
             },
           },
         },
@@ -71,6 +72,7 @@ export async function GET(request: NextRequest) {
         type: 'material',
         subject: material.subject.name,
         uploadedBy: material.uploadedBy.fullName,
+        authorRole: material.uploadedBy.role,
         createdAt: material.createdAt,
         url: `/materials/${material.id}`,
       }));
@@ -122,6 +124,7 @@ export async function GET(request: NextRequest) {
         type: 'discussion',
         subject: discussion.subject?.name,
         author: discussion.author.fullName,
+        authorRole: discussion.author.role,
         commentsCount: discussion._count.comments,
         createdAt: discussion.createdAt,
         url: `/discussions/${discussion.id}`,

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 interface SearchResult {
   id: string;
@@ -17,6 +18,7 @@ interface SearchResult {
   subject?: string;
   uploadedBy?: string;
   author?: string;
+  authorRole?: string;
   commentsCount?: number;
   url: string;
   createdAt: string;
@@ -306,8 +308,15 @@ export function GlobalSearch() {
                             </Badge>
                           )}
                           {result.author && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {result.author}
+                            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                              {getStaffBadge(result.authorRole as any) && (
+                                <span title={getStaffBadge(result.authorRole as any)?.label}>
+                                  {getStaffBadge(result.authorRole as any)?.icon}
+                                </span>
+                              )}
+                              <span className={getStaffColorClass(result.authorRole as any) || ''}>
+                                {result.author}
+                              </span>
                             </span>
                           )}
                           {result.commentsCount !== undefined && (

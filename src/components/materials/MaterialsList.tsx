@@ -10,6 +10,7 @@ import { FileText } from 'lucide-react';
 import { formatDate, formatFileSize } from '@/lib/utils';
 import { MaterialFilters } from './MaterialFilters';
 import type { Subject } from '@/types/models';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 interface Material {
   id: string;
@@ -186,15 +187,16 @@ export function MaterialsList({ materials, subjects }: MaterialsListProps) {
                           </div>
 
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <p>
+                            <p className="flex items-center gap-1">
                               Загрузил:{' '}
                               {material.uploadedBy.username ? (
-                                <Link href={`/users/${material.uploadedBy.username}`}>
-                                  <span className={`hover:underline cursor-pointer font-medium ${
-                                    material.uploadedBy.role === 'ADMIN' 
-                                      ? 'text-cyan-600 dark:text-cyan-400' 
-                                      : 'text-blue-600 dark:text-blue-400'
-                                  }`}>
+                                <Link href={`/users/${material.uploadedBy.username}`} className="flex items-center gap-1">
+                                  {getStaffBadge(material.uploadedBy.role) && (
+                                    <span className="text-xs" title={getStaffBadge(material.uploadedBy.role)?.label}>
+                                      {getStaffBadge(material.uploadedBy.role)?.icon}
+                                    </span>
+                                  )}
+                                  <span className={`hover:underline cursor-pointer font-medium ${getStaffColorClass(material.uploadedBy.role) || 'text-blue-600 dark:text-blue-400'}`}>
                                     @{material.uploadedBy.username}
                                   </span>
                                 </Link>

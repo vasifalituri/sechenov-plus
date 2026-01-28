@@ -24,6 +24,8 @@ export async function GET() {
         author: {
           select: {
             fullName: true,
+            username: true,
+            role: true,
           },
         },
       },

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Info, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
+import Link from 'next/link';
 
 interface Announcement {
   id: string;
@@ -12,6 +14,8 @@ interface Announcement {
   createdAt: string;
   author: {
     fullName: string;
+    username?: string;
+    role?: string;
   };
 }
 
@@ -108,8 +112,23 @@ export function AnnouncementBanner() {
                   <p className="text-base leading-relaxed whitespace-pre-wrap drop-shadow-md opacity-95 mb-3">
                     {announcement.content}
                   </p>
-                  <p className="text-xs opacity-80">
-                    👤 {announcement.author.fullName} • 📅 {new Date(announcement.createdAt).toLocaleDateString('ru-RU', {
+                  <p className="text-xs opacity-80 flex items-center gap-1">
+                    👤{' '}
+                    {announcement.author.username ? (
+                      <Link href={`/users/${announcement.author.username}`} className="flex items-center gap-1 hover:underline" target="_blank">
+                        {getStaffBadge(announcement.author.role as any) && (
+                          <span title={getStaffBadge(announcement.author.role as any)?.label}>
+                            {getStaffBadge(announcement.author.role as any)?.icon}
+                          </span>
+                        )}
+                        <span className={getStaffColorClass(announcement.author.role as any) || ''}>
+                          {announcement.author.fullName}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span>{announcement.author.fullName}</span>
+                    )}
+                    {' '}• 📅 {new Date(announcement.createdAt).toLocaleDateString('ru-RU', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
