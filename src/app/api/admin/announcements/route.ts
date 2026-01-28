@@ -52,7 +52,7 @@ const createSchema = z.object({
   content: z.string().min(1, 'Содержание обязательно'),
   type: z.enum(['INFO', 'WARNING', 'SUCCESS', 'ERROR']).default('INFO'),
   priority: z.number().int().min(0).max(100).default(0),
-  expiresAt: z.string().optional(),
+  expiresAt: z.string().nullable().optional(),
 });
 
 export async function POST(req: Request) {
