@@ -105,14 +105,14 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>Обрезать фото профиля</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Обрезать фото профиля</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Crop area */}
-          <div className="relative h-[400px] bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
+          <div className="relative h-[50vh] sm:h-[400px] bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden touch-none">
             <Cropper
               image={imageSrc}
               crop={crop}
@@ -127,8 +127,8 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
           </div>
 
           {/* Zoom slider */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Масштаб</label>
+          <div className="space-y-2 px-1">
+            <label className="text-xs sm:text-sm font-medium">Масштаб</label>
             <Slider
               value={[zoom]}
               min={1}
@@ -140,11 +140,11 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onClose} disabled={isProcessing} className="w-full sm:w-auto">
             Отмена
           </Button>
-          <Button onClick={handleCrop} disabled={isProcessing}>
+          <Button onClick={handleCrop} disabled={isProcessing} className="w-full sm:w-auto">
             {isProcessing ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

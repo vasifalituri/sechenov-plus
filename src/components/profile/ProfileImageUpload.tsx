@@ -131,11 +131,11 @@ export function ProfileImageUpload({
 
   return (
     <>
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-3 sm:gap-4">
         <div className="relative">
-          <Avatar className="w-32 h-32">
+          <Avatar className="w-24 h-24 sm:w-32 sm:h-32">
             <AvatarImage src={currentImage || undefined} alt={userName} />
-            <AvatarFallback className="text-2xl">
+            <AvatarFallback className="text-xl sm:text-2xl">
               {getInitials(userName)}
             </AvatarFallback>
           </Avatar>
