@@ -24,7 +24,7 @@ export const DiscussionCard = memo(function DiscussionCard({ discussion }: Discu
   const [isPinned, setIsPinned] = useState(discussion.isPinned);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isAdmin = session?.user?.role === 'ADMIN';
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MODERATOR';
 
   const handlePin = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();

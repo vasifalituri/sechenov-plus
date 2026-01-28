@@ -32,7 +32,7 @@ export default function DiscussionDetailPage({
   const [error, setError] = useState('');
   const [isPinned, setIsPinned] = useState(false);
 
-  const isAdmin = session?.user?.role === 'ADMIN';
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MODERATOR';
 
   useEffect(() => {
     fetchThread();

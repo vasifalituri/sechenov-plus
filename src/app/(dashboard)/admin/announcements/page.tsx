@@ -62,7 +62,7 @@ export default function AdminAnnouncementsPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-    } else if (session?.user?.role !== 'ADMIN') {
+    } else if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'MODERATOR') {
       router.push('/');
     }
   }, [session, status, router]);

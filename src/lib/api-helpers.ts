@@ -21,7 +21,7 @@ export async function requireAuth(requiredStatus: 'APPROVED' | 'ANY' = 'APPROVED
 }
 
 /**
- * Middleware для проверки админа
+ * Middleware для проверки админа (только ADMIN)
  */
 export async function requireAdmin() {
   const { error, session } = await requireAuth('ANY');
@@ -30,6 +30,21 @@ export async function requireAdmin() {
   
   if (session?.user.role !== 'ADMIN') {
     return { error: NextResponse.json({ error: 'Admin access required' }, { status: 403 }), session: null };
+  }
+  
+  return { error: null, session };
+}
+
+/**
+ * Middleware для проверки модератора (ADMIN или MODERATOR)
+ */
+export async function requireModerator() {
+  const { error, session } = await requireAuth('ANY');
+  
+  if (error) return { error, session: null };
+  
+  if (session?.user.role !== 'ADMIN' && session?.user.role !== 'MODERATOR') {
+    return { error: NextResponse.json({ error: 'Moderator access required' }, { status: 403 }), session: null };
   }
   
   return { error: null, session };

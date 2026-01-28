@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return NextResponse.json(
         { error: 'Доступ запрещен' },
         { status: 403 }
@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     console.log('📝 POST /api/admin/announcements - Start');
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      console.log('❌ Access denied - not admin');
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+      console.log('❌ Access denied - not admin/moderator');
       return NextResponse.json(
         { error: 'Доступ запрещен' },
         { status: 403 }

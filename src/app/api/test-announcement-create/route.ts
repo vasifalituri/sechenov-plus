@@ -10,9 +10,9 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     console.log('🧪 Session:', session?.user?.email, session?.user?.role);
 
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      console.log('🧪 Not admin, returning 403');
-      return NextResponse.json({ error: 'Not admin' }, { status: 403 });
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+      console.log('🧪 Not admin/moderator, returning 403');
+      return NextResponse.json({ error: 'Not admin/moderator' }, { status: 403 });
     }
 
     console.log('🧪 Parsing body...');

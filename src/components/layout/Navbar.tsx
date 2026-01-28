@@ -71,7 +71,7 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-2 flex-shrink-0" suppressHydrationWarning>
-            {session?.user.role === 'ADMIN' && (
+            {(session?.user.role === 'ADMIN' || session?.user.role === 'MODERATOR') && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">
                   Админ-панель

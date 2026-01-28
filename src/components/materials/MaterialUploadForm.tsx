@@ -31,7 +31,7 @@ export function MaterialUploadForm() {
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>([]);
   
   // Determine max file size based on user role
-  const isAdmin = session?.user?.role === 'ADMIN';
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MODERATOR';
   const MAX_FILE_SIZE = isAdmin ? MAX_FILE_SIZE_ADMIN : MAX_FILE_SIZE_USER;
   
   const [formData, setFormData] = useState({

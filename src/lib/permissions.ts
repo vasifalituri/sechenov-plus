@@ -12,7 +12,7 @@ export function isStaff(role?: UserRole | null): boolean {
 }
 
 /**
- * Check if user is an admin (can manage moderators)
+ * Check if user is an admin (can manage moderators and change roles)
  */
 export function isAdmin(role?: UserRole | null): boolean {
   return role === 'ADMIN';
@@ -23,6 +23,22 @@ export function isAdmin(role?: UserRole | null): boolean {
  */
 export function isModerator(role?: UserRole | null): boolean {
   return role === 'MODERATOR';
+}
+
+/**
+ * Check if user can moderate content (approve, reject, delete)
+ * Both ADMIN and MODERATOR can moderate content
+ */
+export function canModerateContent(role?: UserRole | null): boolean {
+  return role === 'ADMIN' || role === 'MODERATOR';
+}
+
+/**
+ * Check if user can manage users (approve, delete, change roles)
+ * Only ADMIN can manage users
+ */
+export function canManageUsers(role?: UserRole | null): boolean {
+  return role === 'ADMIN';
 }
 
 /**

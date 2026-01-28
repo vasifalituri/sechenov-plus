@@ -26,7 +26,7 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const isAdmin = session?.user?.role === 'ADMIN';
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'MODERATOR';
 
   const handlePin = async () => {
     try {

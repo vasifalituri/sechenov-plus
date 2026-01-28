@@ -170,7 +170,7 @@ export function MobileMenu() {
               )}
 
               {/* Admin Link */}
-              {session?.user.role === 'ADMIN' && (
+              {(session?.user.role === 'ADMIN' || session?.user.role === 'MODERATOR') && (
                 <Link
                   href="/admin"
                   className={cn(
