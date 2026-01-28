@@ -3,8 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, FileText, MessageSquare, Clock, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 async function getAdminStats() {
   const [

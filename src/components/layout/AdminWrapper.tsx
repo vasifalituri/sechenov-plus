@@ -4,7 +4,6 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 
 export function AdminWrapper({ children }: { children: React.ReactNode }) {
   const navItems = [
