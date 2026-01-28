@@ -114,20 +114,18 @@ export default async function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {isAdmin && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.pendingUsers} ожидают одобрения
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.pendingUsers} ожидают одобрения
+            </p>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -171,9 +169,8 @@ export default async function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {isAdmin && (
-          <Link href="/admin/users">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+        <Link href="/admin/users">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -185,7 +182,6 @@ export default async function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        )}
 
         <Link href="/admin/materials">
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
@@ -231,31 +227,29 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Pending Items */}
-      <div className={`grid grid-cols-1 gap-6 ${isAdmin ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
-        {isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Заявки на регистрацию</CardTitle>
-              <CardDescription>Пользователи ожидают одобрения</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activity.recentUsers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Нет заявок</p>
-              ) : (
-                <div className="space-y-3">
-                  {activity.recentUsers.map((user) => (
-                    <div key={user.id} className="text-sm">
-                      <p className="font-medium">{user.fullName}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {user.email} • {user.academicYear} курс
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Заявки на регистрацию</CardTitle>
+            <CardDescription>Пользователи ожидают одобрения</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {activity.recentUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Нет заявок</p>
+            ) : (
+              <div className="space-y-3">
+                {activity.recentUsers.map((user) => (
+                  <div key={user.id} className="text-sm">
+                    <p className="font-medium">{user.fullName}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {user.email} • {user.academicYear} курс
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

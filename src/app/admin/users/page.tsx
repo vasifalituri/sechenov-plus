@@ -17,10 +17,10 @@ export default function AdminUsersPage() {
   const [filter, setFilter] = useState<string>('ALL');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  // Redirect if not ADMIN (only ADMIN can manage users, not MODERATOR)
+  // Redirect if not ADMIN or MODERATOR
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       router.push('/admin');
     }
   }, [session, status, router]);

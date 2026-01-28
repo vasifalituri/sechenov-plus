@@ -12,12 +12,12 @@ export function AdminWrapper({ children }: { children: React.ReactNode }) {
   
   const navItems = [
     { href: '/admin', label: 'Панель управления', icon: Home, adminOnly: false },
-    { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: true },
+    { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: false },
     { href: '/admin/materials', label: 'Материалы', icon: FileText, adminOnly: false },
     { href: '/admin/discussions', label: 'Обсуждения', icon: MessageSquare, adminOnly: false },
     { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3, adminOnly: false },
     { href: '/admin/announcements', label: 'Объявления', icon: Megaphone, adminOnly: false },
-  ].filter(item => !item.adminOnly || isAdmin);
+  ];
 
   return (
     <ThemeProvider>

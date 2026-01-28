@@ -27,9 +27,9 @@ export async function GET(
       return NextResponse.json({ error: 'Material not found' }, { status: 404 });
     }
 
-    // Allow admins to download any material, regular users only approved materials
-    const isAdmin = session.user.role === 'ADMIN';
-    if (!isAdmin && material.status !== 'APPROVED') {
+    // Allow admins and moderators to download any material, regular users only approved materials
+    const isStaff = session.user.role === 'ADMIN' || session.user.role === 'MODERATOR';
+    if (!isStaff && material.status !== 'APPROVED') {
       return NextResponse.json({ error: 'Material not available' }, { status: 403 });
     }
 
