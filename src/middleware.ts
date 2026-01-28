@@ -16,8 +16,8 @@ export default withAuth(
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    // Check admin routes
-    if (path.startsWith('/admin') && token?.role !== 'ADMIN') {
+    // Check admin routes - allow both ADMIN and MODERATOR
+    if (path.startsWith('/admin') && token?.role !== 'ADMIN' && token?.role !== 'MODERATOR') {
       return NextResponse.redirect(new URL('/', req.url));
     }
 

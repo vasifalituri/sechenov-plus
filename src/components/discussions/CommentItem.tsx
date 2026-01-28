@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Pin, Trash2, MessageSquare, Reply } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 import { VoteButtons } from './VoteButtons';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 interface CommentItemProps {
   comment: any;
@@ -127,11 +128,12 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
                 {comment.author.fullName?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <span className={`font-semibold text-xs hover:underline ${
-              comment.author.role === 'ADMIN' 
-                ? 'text-cyan-600 dark:text-cyan-400' 
-                : ''
-            }`}>
+            {getStaffBadge(comment.author.role) && (
+              <span className="text-xs" title={getStaffBadge(comment.author.role)?.label}>
+                {getStaffBadge(comment.author.role)?.icon}
+              </span>
+            )}
+            <span className={`font-semibold text-xs hover:underline ${getStaffColorClass(comment.author.role)}`}>
               @{comment.author.username}
             </span>
           </Link>

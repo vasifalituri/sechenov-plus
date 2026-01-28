@@ -11,6 +11,7 @@ import { MessageCircle, Pin, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { VoteButtons } from './VoteButtons';
+import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 import type { Discussion } from '@/types/models';
 
 interface DiscussionCardProps {
@@ -104,11 +105,7 @@ export const DiscussionCard = memo(function DiscussionCard({ discussion }: Discu
               <Link 
                 href={`/users/${discussion.author.username}`} 
                 onClick={(e) => e.stopPropagation()}
-                className={`flex items-center gap-1.5 text-xs hover:text-blue-600 dark:hover:text-blue-400 ${
-                  discussion.author.role === 'ADMIN' 
-                    ? 'text-cyan-600 dark:text-cyan-400 font-semibold' 
-                    : 'text-muted-foreground'
-                }`}
+                className="flex items-center gap-1.5 text-xs hover:text-blue-600 dark:hover:text-blue-400"
               >
                 <Avatar className="w-5 h-5">
                   <AvatarImage src={discussion.author.profileImage || undefined} alt={discussion.author.fullName} />
@@ -116,7 +113,14 @@ export const DiscussionCard = memo(function DiscussionCard({ discussion }: Discu
                     {discussion.author.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
-                @{discussion.author.username}
+                {getStaffBadge(discussion.author.role) && (
+                  <span className="text-xs" title={getStaffBadge(discussion.author.role)?.label}>
+                    {getStaffBadge(discussion.author.role)?.icon}
+                  </span>
+                )}
+                <span className={`font-semibold ${getStaffColorClass(discussion.author.role) || 'text-muted-foreground'}`}>
+                  @{discussion.author.username}
+                </span>
               </Link>
               <span className="text-xs text-muted-foreground">
                 • {formatDate(discussion.createdAt)}

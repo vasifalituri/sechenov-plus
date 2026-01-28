@@ -25,7 +25,7 @@ interface Material {
     username: string | null;
     fullName: string;
     academicYear: number;
-    role?: 'USER' | 'ADMIN';
+    role?: 'USER' | 'MODERATOR' | 'ADMIN';
   };
   ratings: {
     rating: number;

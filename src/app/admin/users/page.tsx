@@ -73,6 +73,34 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleChangeRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
+    const roleLabels = { USER: 'обычным пользователем', MODERATOR: 'модератором', ADMIN: 'администратором' };
+    
+    if (!confirm(`Вы уверены, что хотите сделать этого пользователя ${roleLabels[newRole]}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        fetchUsers();
+      } else {
+        alert(data.error || 'Ошибка при изменении роли');
+      }
+    } catch (error) {
+      console.error('Error changing role:', error);
+      alert('Ошибка при изменении роли');
+    }
+  };
+
   const filteredUsers = users.filter((user) => {
     if (filter === 'ALL') return true;
     return user.status === filter;
@@ -175,7 +203,10 @@ export default function AdminUsersPage() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {user.email} • {user.academicYear} курс • {user.role}
+                        {user.email} • {user.academicYear} курс • 
+                        {user.role === 'ADMIN' && ' 👑 Админ'}
+                        {user.role === 'MODERATOR' && ' ⭐ Модератор'}
+                        {user.role === 'USER' && ' Пользователь'}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Зарегистрирован: {formatDate(user.createdAt)}
@@ -208,6 +239,32 @@ export default function AdminUsersPage() {
                         <X className="w-4 h-4 mr-1" />
                         Отклонить
                       </Button>
+                    </>
+                  )}
+
+                  {/* Role Management (ADMIN only) */}
+                  {user.status === 'APPROVED' && user.role !== 'ADMIN' && (
+                    <>
+                      {user.role === 'USER' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleChangeRole(user.id, 'MODERATOR')}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        >
+                          ⭐ Сделать модератором
+                        </Button>
+                      )}
+                      {user.role === 'MODERATOR' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleChangeRole(user.id, 'USER')}
+                          className="text-gray-600"
+                        >
+                          Снять модератора
+                        </Button>
+                      )}
                     </>
                   )}
 
