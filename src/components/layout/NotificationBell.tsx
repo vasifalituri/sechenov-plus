@@ -164,68 +164,69 @@ export function NotificationBell() {
           />
 
           {/* Notification Panel */}
-          <div className="absolute right-0 mt-2 w-96 max-h-[600px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[80vh] sm:max-h-[600px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl z-50 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
-              <h3 className="font-semibold text-lg">Уведомления</h3>
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b dark:border-gray-800">
+              <h3 className="font-semibold text-base sm:text-lg">Уведомления</h3>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={markAllAsRead}
-                  className="text-xs"
+                  className="text-xs h-8 px-2"
                 >
-                  <CheckCheck className="w-4 h-4 mr-1" />
-                  Прочитать все
+                  <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">Прочитать все</span>
+                  <span className="sm:hidden">Все</span>
                 </Button>
               )}
             </div>
 
             {/* Notifications List */}
-            <div className="overflow-y-auto max-h-[500px]">
+            <div className="overflow-y-auto max-h-[calc(80vh-4rem)] sm:max-h-[500px]">
               {isLoading ? (
-                <div className="p-8 text-center text-muted-foreground">
+                <div className="p-6 sm:p-8 text-center text-muted-foreground">
                   Загрузка...
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Нет уведомлений</p>
+                <div className="p-6 sm:p-8 text-center text-muted-foreground">
+                  <Bell className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Нет уведомлений</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
-                      'p-4 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+                      'p-3 sm:p-4 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
                       !notification.isRead && 'bg-blue-50/50 dark:bg-blue-900/10'
                     )}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       {/* Icon */}
-                      <div className="text-2xl flex-shrink-0">
+                      <div className="text-xl sm:text-2xl flex-shrink-0">
                         {getNotificationIcon(notification.type)}
                       </div>
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-medium text-sm">{notification.title}</h4>
+                          <h4 className="font-medium text-sm break-words">{notification.title}</h4>
                           {!notification.isRead && (
                             <button
                               onClick={() => markAsRead(notification.id)}
-                              className="text-blue-600 hover:text-blue-700 flex-shrink-0"
+                              className="text-blue-600 hover:text-blue-700 flex-shrink-0 p-1"
                               title="Отметить как прочитанное"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                           {notification.message}
                         </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between mt-2 gap-2">
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
                             {formatTime(notification.createdAt)}
                           </span>
                           {notification.link && (
@@ -235,7 +236,7 @@ export function NotificationBell() {
                                 markAsRead(notification.id);
                                 setIsOpen(false);
                               }}
-                              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 flex-shrink-0"
                             >
                               Перейти →
                             </Link>
