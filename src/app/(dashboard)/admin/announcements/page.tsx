@@ -104,7 +104,13 @@ export default function AdminAnnouncementsPage() {
         }),
       });
 
-      if (!response.ok) throw new Error();
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.error || 'Неизвестная ошибка';
+        console.error('API Error:', data);
+        throw new Error(errorMsg);
+      }
 
       toast.success(
         editingId ? 'Объявление обновлено' : 'Объявление создано'
@@ -114,7 +120,9 @@ export default function AdminAnnouncementsPage() {
       resetForm();
       fetchAnnouncements();
     } catch (error) {
-      toast.error('Ошибка сохранения объявления');
+      console.error('Submit error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка сохранения объявления';
+      toast.error(errorMessage);
     }
   };
 
