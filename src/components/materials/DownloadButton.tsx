@@ -32,16 +32,15 @@ export function DownloadButton({
         const data = await response.json();
         
         if (data.success && data.downloadType === 'EXTERNAL_MEGA') {
-          // Detect mobile device
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          
-          if (isMobile) {
-            // On mobile, use location.href for better compatibility
-            window.location.href = data.externalUrl;
-          } else {
-            // On desktop, open in new tab
-            window.open(data.externalUrl, '_blank', 'noopener,noreferrer');
-          }
+          // Create a temporary link element and click it
+          // This works better on mobile browsers
+          const link = document.createElement('a');
+          link.href = data.externalUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         } else {
           console.error('Unexpected response:', data);
           alert('Ошибка при скачивании файла');
