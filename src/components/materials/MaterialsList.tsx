@@ -24,8 +24,11 @@ interface Material {
   createdAt: Date | string;
   subject: Subject;
   uploadedBy: {
+    id: string;
+    username: string | null;
     fullName: string;
     academicYear: number;
+    role?: 'USER' | 'ADMIN';
   };
   ratings: {
     rating: number;
@@ -183,7 +186,22 @@ export function MaterialsList({ materials, subjects }: MaterialsListProps) {
                           </div>
 
                           <div className="text-xs text-muted-foreground space-y-1">
-                            <p>Загрузил: {material.uploadedBy.fullName}</p>
+                            <p>
+                              Загрузил:{' '}
+                              {material.uploadedBy.username ? (
+                                <Link href={`/users/${material.uploadedBy.username}`}>
+                                  <span className={`hover:underline cursor-pointer font-medium ${
+                                    material.uploadedBy.role === 'ADMIN' 
+                                      ? 'text-cyan-600 dark:text-cyan-400' 
+                                      : 'text-blue-600 dark:text-blue-400'
+                                  }`}>
+                                    @{material.uploadedBy.username}
+                                  </span>
+                                </Link>
+                              ) : (
+                                <span>{material.uploadedBy.fullName}</span>
+                              )}
+                            </p>
                             <p>Размер: {formatFileSize(material.fileSize)}</p>
                             <p>Дата: {formatDate(material.createdAt)}</p>
                             <p>Скачиваний: {material.downloadCount}</p>

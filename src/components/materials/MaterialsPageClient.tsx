@@ -21,8 +21,11 @@ interface Material {
   createdAt: Date | string;
   subject: Subject;
   uploadedBy: {
+    id: string;
+    username: string | null;
     fullName: string;
     academicYear: number;
+    role?: 'USER' | 'ADMIN';
   };
   ratings: {
     rating: number;

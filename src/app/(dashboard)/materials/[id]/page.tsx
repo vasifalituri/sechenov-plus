@@ -17,8 +17,11 @@ async function getMaterial(id: string) {
       subject: true,
       uploadedBy: {
         select: {
+          id: true,
+          username: true,
           fullName: true,
           academicYear: true,
+          role: true,
         },
       },
     },
@@ -80,7 +83,19 @@ export default async function MaterialDetailPage({
           <div className="grid grid-cols-2 gap-4 py-4 border-y" suppressHydrationWarning>
             <div suppressHydrationWarning>
               <p className="text-sm text-muted-foreground">Загрузил</p>
-              <p className="font-medium">{material.uploadedBy.fullName}</p>
+              {material.uploadedBy.username ? (
+                <Link href={`/users/${material.uploadedBy.username}`}>
+                  <p className={`font-medium hover:underline cursor-pointer ${
+                    material.uploadedBy.role === 'ADMIN' 
+                      ? 'text-cyan-600 dark:text-cyan-400' 
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`}>
+                    @{material.uploadedBy.username}
+                  </p>
+                </Link>
+              ) : (
+                <p className="font-medium">{material.uploadedBy.fullName}</p>
+              )}
               <p className="text-sm text-muted-foreground">
                 {material.uploadedBy.academicYear} курс
               </p>

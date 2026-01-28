@@ -247,7 +247,21 @@ export default function AdminMaterialsPage() {
                     {material.description || 'Без описания'}
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Загрузил: {material.uploadedBy.fullName}</span>
+                    <span>
+                      Загрузил:{' '}
+                      <a 
+                        href={`/users/${material.uploadedBy.username}`}
+                        className={`hover:underline font-medium ${
+                          material.uploadedBy.role === 'ADMIN' 
+                            ? 'text-cyan-600 dark:text-cyan-400' 
+                            : 'text-blue-600 dark:text-blue-400'
+                        }`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        @{material.uploadedBy.username}
+                      </a>
+                    </span>
                     <span>•</span>
                     <span>Размер: {formatFileSize(material.fileSize)}</span>
                     <span>•</span>

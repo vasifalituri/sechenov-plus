@@ -7,7 +7,13 @@ async function getMaterials() {
     include: {
       subject: true,
       uploadedBy: {
-        select: { fullName: true, academicYear: true },
+        select: { 
+          id: true,
+          username: true,
+          fullName: true, 
+          academicYear: true,
+          role: true,
+        },
       },
       ratings: {
         select: { rating: true },
