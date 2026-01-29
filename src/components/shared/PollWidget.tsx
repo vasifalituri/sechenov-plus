@@ -86,11 +86,6 @@ export function PollWidget() {
     }
   };
 
-  const handleChangeVote = () => {
-    setHasVoted(false);
-    setUserVotes([]);
-  };
-
   if (!poll) return null;
 
   const totalVotes = poll._count.votes;
@@ -116,12 +111,14 @@ export function PollWidget() {
 
               return (
                 <div key={option.id} className="relative">
-                  <div
-                    className={`p-3 rounded-lg border transition-all ${
+                  <button
+                    onClick={() => !isUserVote && handleVote(option.id)}
+                    disabled={isVoting || isUserVote}
+                    className={`w-full p-3 rounded-lg border transition-all text-left ${
                       isUserVote 
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-gray-200 dark:border-gray-700'
-                    }`}
+                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer'
+                    } ${isVoting && !isUserVote ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
@@ -139,23 +136,15 @@ export function PollWidget() {
                     <span className="text-xs text-muted-foreground">
                       {option._count.votes} {option._count.votes === 1 ? 'голос' : 'голосов'}
                     </span>
-                  </div>
+                  </button>
                 </div>
               );
             })}
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <p className="text-xs text-muted-foreground">
-                Всего проголосовало: {totalVotes} {totalVotes === 1 ? 'человек' : 'человек'}
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleChangeVote}
-                className="text-xs h-7"
-              >
-                Изменить голос
-              </Button>
-            </div>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Всего проголосовало: {totalVotes} {totalVotes === 1 ? 'человек' : 'человек'}
+              <br />
+              <span className="text-[10px] opacity-70">Нажмите на другой вариант, чтобы изменить голос</span>
+            </p>
           </>
         ) : (
           <>
