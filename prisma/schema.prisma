@@ -82,8 +82,8 @@ model User {
   verificationCodes    VerificationCode[]
   announcements        Announcement[]     @relation("AnnouncementAuthor")
   externalResources    ExternalResource[] @relation("ResourceCreator")
-  createdPolls         Poll[]             @relation(\"PollCreator\")
-  pollVotes            PollVote[]         @relation(\"PollVoter\")
+  createdPolls         Poll[]             @relation("PollCreator")
+  pollVotes            PollVote[]         @relation("PollVoter")
 
   @@index([email])
   @@index([username])
