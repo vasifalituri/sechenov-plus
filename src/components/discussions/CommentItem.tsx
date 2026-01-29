@@ -105,14 +105,14 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
 
   return (
     <div className="flex gap-2 group">
-      {/* Vote buttons - horizontal for comments */}
+      {/* Vote buttons - vertical for comments */}
       <div className="flex-shrink-0 pt-1">
         <VoteButtons
           commentId={comment.id}
           initialUpvotes={comment.upvotes}
           initialDownvotes={comment.downvotes}
           initialUserVote={comment.userVote}
-          vertical={false}
+          vertical={true}
         />
       </div>
 
