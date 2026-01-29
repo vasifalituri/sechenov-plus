@@ -86,6 +86,11 @@ export function PollWidget() {
     }
   };
 
+  const handleChangeVote = () => {
+    setHasVoted(false);
+    setUserVotes([]);
+  };
+
   if (!poll) return null;
 
   const totalVotes = poll._count.votes;
@@ -138,9 +143,19 @@ export function PollWidget() {
                 </div>
               );
             })}
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Всего проголосовало: {totalVotes} {totalVotes === 1 ? 'человек' : 'человек'}
-            </p>
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-xs text-muted-foreground">
+                Всего проголосовало: {totalVotes} {totalVotes === 1 ? 'человек' : 'человек'}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleChangeVote}
+                className="text-xs h-7"
+              >
+                Изменить голос
+              </Button>
+            </div>
           </>
         ) : (
           <>
