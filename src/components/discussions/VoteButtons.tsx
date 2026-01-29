@@ -71,8 +71,8 @@ export const VoteButtons = memo(function VoteButtons({
   }, [isLoading, threadId, commentId]);
 
   const containerClass = vertical
-    ? 'flex flex-col items-center space-y-1'
-    : 'flex items-center space-x-2';
+    ? 'flex flex-col items-center gap-0'
+    : 'flex items-center gap-2';
 
   return (
     <div className={containerClass}>
@@ -80,38 +80,42 @@ export const VoteButtons = memo(function VoteButtons({
         onClick={() => handleVote('UPVOTE')}
         disabled={isLoading}
         className={cn(
-          'p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50',
-          userVote === 'UPVOTE' && 'text-orange-500 bg-orange-100 dark:bg-orange-900/30'
+          'p-0.5 rounded transition-colors disabled:opacity-50',
+          userVote === 'UPVOTE' 
+            ? 'text-orange-500 hover:text-orange-600' 
+            : 'text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-500'
         )}
         title="Upvote"
         aria-label="Upvote"
       >
-        <ArrowUp className={cn('w-5 h-5', userVote === 'UPVOTE' && 'fill-current')} />
+        <ArrowUp className={cn('w-4 h-4 stroke-[2.5]', userVote === 'UPVOTE' && 'fill-current')} />
       </button>
 
       <span
         className={cn(
-          'text-sm font-bold min-w-[30px] text-center',
-          score > 0 && 'text-orange-500',
-          score < 0 && 'text-blue-500',
-          score === 0 && 'text-gray-500 dark:text-gray-400'
+          'text-xs font-semibold min-w-[24px] text-center leading-none',
+          userVote === 'UPVOTE' && 'text-orange-500',
+          userVote === 'DOWNVOTE' && 'text-blue-500',
+          !userVote && 'text-gray-700 dark:text-gray-300'
         )}
         aria-label={`Score: ${score}`}
       >
-        {score > 0 ? `+${score}` : score}
+        {score}
       </span>
 
       <button
         onClick={() => handleVote('DOWNVOTE')}
         disabled={isLoading}
         className={cn(
-          'p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50',
-          userVote === 'DOWNVOTE' && 'text-blue-500 bg-blue-100 dark:bg-blue-900/30'
+          'p-0.5 rounded transition-colors disabled:opacity-50',
+          userVote === 'DOWNVOTE' 
+            ? 'text-blue-500 hover:text-blue-600' 
+            : 'text-gray-400 hover:text-blue-500 dark:text-gray-500 dark:hover:text-blue-500'
         )}
         title="Downvote"
         aria-label="Downvote"
       >
-        <ArrowDown className={cn('w-5 h-5', userVote === 'DOWNVOTE' && 'fill-current')} />
+        <ArrowDown className={cn('w-4 h-4 stroke-[2.5]', userVote === 'DOWNVOTE' && 'fill-current')} />
       </button>
     </div>
   );

@@ -104,18 +104,7 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
   const score = comment.upvotes - comment.downvotes;
 
   return (
-    <div className="flex gap-2 group">
-      {/* Vote buttons - vertical for comments */}
-      <div className="flex-shrink-0 pt-1">
-        <VoteButtons
-          commentId={comment.id}
-          initialUpvotes={comment.upvotes}
-          initialDownvotes={comment.downvotes}
-          initialUserVote={comment.userVote}
-          vertical={true}
-        />
-      </div>
-
+    <div className="group">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {isPinned && (
@@ -150,18 +139,19 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
           )}
         </div>
         
-        <p className="text-sm mb-2 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+        <p className="text-sm mb-1.5 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
         
-        <div className="flex items-center gap-3 flex-wrap">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsReplying(!isReplying)}
-            className="h-6 px-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <Reply className="w-3 h-3 mr-1" />
-            Ответить
-          </Button>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsReplying(!isReplying)}
+              className="h-6 px-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <Reply className="w-3 h-3 mr-1" />
+              Ответить
+            </Button>
 
           {comment.replies && comment.replies.length > 0 && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -193,6 +183,18 @@ export function CommentItem({ comment, threadId, onDelete }: CommentItemProps) {
               </Button>
             </>
           )}
+          </div>
+
+          {/* Vote buttons - Reddit style, bottom right */}
+          <div className="flex-shrink-0">
+            <VoteButtons
+              commentId={comment.id}
+              initialUpvotes={comment.upvotes}
+              initialDownvotes={comment.downvotes}
+              initialUserVote={comment.userVote}
+              vertical={true}
+            />
+          </div>
         </div>
 
         {/* Reply form */}
