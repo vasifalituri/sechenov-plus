@@ -82,6 +82,8 @@ model User {
   verificationCodes    VerificationCode[]
   announcements        Announcement[]     @relation("AnnouncementAuthor")
   externalResources    ExternalResource[] @relation("ResourceCreator")
+  createdPolls         Poll[]             @relation(\"PollCreator\")
+  pollVotes            PollVote[]         @relation(\"PollVoter\")
 
   @@index([email])
   @@index([username])
@@ -405,4 +407,66 @@ model ExternalResource {
   @@index([order])
   @@index([authorId])
   @@map("external_resources")
+}
+
+// Polls - Admin/Moderator can create polls for users to vote on
+model Poll {
+  id          String   @id @default(cuid())
+  question    String   // Poll question
+  description String?  @db.Text // Optional description
+  isActive    Boolean  @default(true) // Only active polls are shown
+  isMultiple  Boolean  @default(false) // Allow multiple choices
+  
+  // Author
+  createdById String
+  createdBy   User   @relation("PollCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime? // Optional expiration date
+  
+  // Relations
+  options PollOption[]
+  votes   PollVote[]
+  
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([createdById])
+  @@map("polls")
+}
+
+// Poll Options - Individual choices for a poll
+model PollOption {
+  id       String @id @default(cuid())
+  pollId   String
+  text     String // Option text
+  order    Int    @default(0) // Display order
+  
+  // Relations
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+  
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+// Poll Votes - Track user votes
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation("PollVoter", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([pollId, userId, optionId]) // Prevent duplicate votes for same option
+  @@index([pollId])
+  @@index([optionId])
+  @@index([userId])
+  @@map("poll_votes")
 }

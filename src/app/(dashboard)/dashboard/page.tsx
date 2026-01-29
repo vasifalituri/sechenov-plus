@@ -8,6 +8,7 @@ import { BookOpen, MessageSquare, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { GlobalSearch } from '@/components/layout/GlobalSearch';
 import { AnnouncementBanner } from '@/components/shared/AnnouncementBanner';
+import { PollWidget } from '@/components/shared/PollWidget';
 import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
 
 async function getStats() {
@@ -129,6 +130,9 @@ export default async function HomePage() {
 
       {/* Announcements */}
       <AnnouncementBanner />
+
+      {/* Poll Widget */}
+      <PollWidget />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Discussions - Reddit style */}
