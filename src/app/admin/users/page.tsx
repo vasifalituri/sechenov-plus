@@ -6,29 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
 import { Check, X, Trash2, Mail, MailCheck, RefreshCw } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 export default function AdminUsersPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [isReady, setIsReady] = useState(false);
-
-  // Redirect if not ADMIN or MODERATOR
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
-      router.push('/admin');
-      return;
-    }
-    setIsReady(true);
-  }, [session, status, router]);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch current user role
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.user && data.user.role) {
+          setUserRole(data.user.role);
+        }
+      });
     fetchUsers();
   }, []);
 
@@ -116,14 +110,9 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Show loading until everything is ready
-  if (status === 'loading' || !isReady || isLoading) {
+  // Show loading
+  if (isLoading || !userRole) {
     return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
-  }
-
-  // Extra safety check
-  if (!session || !session.user || (!session.user.role)) {
-    return null;
   }
 
   const filteredUsers = users.filter((user) => {
@@ -264,7 +253,7 @@ export default function AdminUsersPage() {
                   )}
 
                   {/* Role Management (ADMIN only) */}
-                  {session && session.user && session.user.role === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
+                  {userRole === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
                     <>
                       {user.role === 'USER' && (
                         <Button

@@ -17,8 +17,9 @@ export function AdminWrapper({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+    <SessionProvider>
+      <ThemeProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
         <nav className="bg-white dark:bg-gray-900 border-b dark:border-gray-800 transition-colors">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
@@ -55,6 +56,7 @@ export function AdminWrapper({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
-    </ThemeProvider>
+      </ThemeProvider>
+    </SessionProvider>
   );
 }
