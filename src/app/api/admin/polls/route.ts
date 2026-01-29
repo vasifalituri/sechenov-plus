@@ -37,9 +37,13 @@ export async function GET() {
     });
 
     return NextResponse.json(polls);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching polls:', error);
-    return NextResponse.json({ error: 'Failed to fetch polls' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch polls', 
+      details: error.message,
+      code: error.code 
+    }, { status: 500 });
   }
 }
 
