@@ -138,3 +138,6 @@ export async function POST(
     return NextResponse.json(
       { error: 'Не удалось создать отзыв' },
       { status: 500 }
+    );
+  }
+}
