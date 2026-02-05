@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // POST /api/teachers/[id]/rating - Оценить преподавателя
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -36,7 +37,7 @@ export async function POST(
 
     // Проверяем существование преподавателя
     const teacher = await prisma.teacher.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!teacher) {
@@ -54,7 +55,7 @@ export async function POST(
     const existingRating = await prisma.teacherRating.findUnique({
       where: {
         teacherId_userId: {
-          teacherId: params.id,
+          teacherId: id,
           userId: session.user.id,
         },
       },
@@ -78,7 +79,7 @@ export async function POST(
       // Создаем новую оценку
       rating = await prisma.teacherRating.create({
         data: {
-          teacherId: params.id,
+          teacherId: id,
           userId: session.user.id,
           knowledgeRating,
           teachingRating,
@@ -91,7 +92,7 @@ export async function POST(
 
     // Пересчитываем средний рейтинг преподавателя
     const allRatings = await prisma.teacherRating.findMany({
-      where: { teacherId: params.id },
+      where: { teacherId: id },
       select: { overallRating: true },
     });
 
@@ -100,7 +101,7 @@ export async function POST(
 
     // Обновляем статистику преподавателя
     await prisma.teacher.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         averageRating,
         totalRatings: allRatings.length,
@@ -120,9 +121,10 @@ export async function POST(
 // GET /api/teachers/[id]/rating - Получить оценку текущего пользователя
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -132,7 +134,7 @@ export async function GET(
     const rating = await prisma.teacherRating.findUnique({
       where: {
         teacherId_userId: {
-          teacherId: params.id,
+          teacherId: id,
           userId: session.user.id,
         },
       },

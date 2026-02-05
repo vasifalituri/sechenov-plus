@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma';
 // GET /api/teachers/[id] - Получить информацию о преподавателе
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const teacher = await prisma.teacher.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         subjects: {
           include: {
@@ -79,9 +80,10 @@ export async function GET(
 // PATCH /api/teachers/[id] - Обновить информацию о преподавателе (только для админов/модераторов)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -108,12 +110,12 @@ export async function PATCH(
     // Если обновляются предметы, сначала удаляем старые связи
     if (subjectIds !== undefined) {
       await prisma.teacherSubject.deleteMany({
-        where: { teacherId: params.id },
+        where: { teacherId: id },
       });
     }
 
     const teacher = await prisma.teacher.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...updateData,
         subjects: subjectIds
@@ -146,9 +148,10 @@ export async function PATCH(
 // DELETE /api/teachers/[id] - Удалить преподавателя (только для админов)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -160,7 +163,7 @@ export async function DELETE(
     }
 
     await prisma.teacher.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Преподаватель удален' });

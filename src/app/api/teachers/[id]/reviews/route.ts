@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // GET /api/teachers/[id]/reviews - Получить отзывы о преподавателе
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const includeAll = searchParams.get('includeAll') === 'true'; // Для админов/модераторов
 
@@ -17,7 +18,7 @@ export async function GET(
       session?.user?.role === 'ADMIN' || session?.user?.role === 'MODERATOR';
 
     const where: any = {
-      teacherId: params.id,
+      teacherId: id,
     };
 
     // Обычные пользователи видят только одобренные отзывы
@@ -63,9 +64,10 @@ export async function GET(
 // POST /api/teachers/[id]/reviews - Добавить отзыв о преподавателе
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -84,7 +86,7 @@ export async function POST(
 
     // Проверяем существование преподавателя
     const teacher = await prisma.teacher.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!teacher) {
@@ -97,7 +99,7 @@ export async function POST(
     // Проверяем, не оставлял ли пользователь уже отзыв
     const existingReview = await prisma.teacherReview.findFirst({
       where: {
-        teacherId: params.id,
+        teacherId: id,
         userId: session.user.id,
       },
     });
@@ -112,7 +114,7 @@ export async function POST(
     // Создаем отзыв (по умолчанию PENDING для модерации)
     const review = await prisma.teacherReview.create({
       data: {
-        teacherId: params.id,
+        teacherId: id,
         userId: session.user.id,
         content: content.trim(),
         isAnonymous: isAnonymous || false,
@@ -136,6 +138,3 @@ export async function POST(
     return NextResponse.json(
       { error: 'Не удалось создать отзыв' },
       { status: 500 }
-    );
-  }
-}
