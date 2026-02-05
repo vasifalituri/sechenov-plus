@@ -6,16 +6,18 @@
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --turbo false",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
     "migrate:storage": "ts-node scripts/migrate-files-to-storage.ts",
     "migrate:storage:dry-run": "ts-node scripts/migrate-files-to-storage.ts --dry-run",
-    "setup:storage": "ts-node scripts/setup-supabase-storage.ts"
+    "setup:storage": "ts-node scripts/setup-supabase-storage.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.8.0",

@@ -89,6 +89,86 @@ async function main() {
 
   console.log(`✅ Created ${subjects.length} subjects`);
 
+  // Create sample teachers
+  const anatomySubject = await prisma.subject.findUnique({ where: { slug: 'anatomy' } });
+  const physiologySubject = await prisma.subject.findUnique({ where: { slug: 'normal-physiology' } });
+  const biochemistrySubject = await prisma.subject.findUnique({ where: { slug: 'biochemistry' } });
+  const pharmacologySubject = await prisma.subject.findUnique({ where: { slug: 'pharmacology' } });
+  const surgerySubject = await prisma.subject.findUnique({ where: { slug: 'general-surgery' } });
+
+  const teachers = [
+    {
+      fullName: 'Иванов Иван Иванович',
+      department: 'Анатомия',
+      position: 'Профессор',
+      academicDegree: 'д.м.н.',
+      bio: 'Заведующий кафедрой анатомии человека. Автор более 100 научных публикаций. Специализируется на нейроанатомии и клинической анатомии.',
+      subjects: anatomySubject ? [anatomySubject.id] : [],
+    },
+    {
+      fullName: 'Петрова Мария Александровна',
+      department: 'Физиология',
+      position: 'Доцент',
+      academicDegree: 'к.м.н.',
+      bio: 'Доцент кафедры нормальной физиологии. Ведет исследования в области нейрофизиологии и физиологии высшей нервной деятельности.',
+      subjects: physiologySubject ? [physiologySubject.id] : [],
+    },
+    {
+      fullName: 'Сидоров Петр Николаевич',
+      department: 'Биохимия',
+      position: 'Профессор',
+      academicDegree: 'д.б.н.',
+      bio: 'Профессор кафедры биохимии. Эксперт в области клинической биохимии и молекулярной диагностики. Лауреат государственных премий.',
+      subjects: biochemistrySubject ? [biochemistrySubject.id] : [],
+    },
+    {
+      fullName: 'Алиева Айгуль Рашидовна',
+      department: 'Фармакология',
+      position: 'Доцент',
+      academicDegree: 'к.м.н.',
+      bio: 'Доцент кафедры фармакологии. Специализируется на клинической фармакологии и фармакотерапии. Автор учебных пособий.',
+      subjects: pharmacologySubject ? [pharmacologySubject.id] : [],
+    },
+    {
+      fullName: 'Ковалев Дмитрий Сергеевич',
+      department: 'Хирургия',
+      position: 'Профессор',
+      academicDegree: 'д.м.н.',
+      bio: 'Заведующий кафедрой общей хирургии. Практикующий хирург с 25-летним стажем. Специализация: абдоминальная хирургия.',
+      subjects: surgerySubject ? [surgerySubject.id] : [],
+    },
+    {
+      fullName: 'Мамедова Лейла Ахмедовна',
+      department: 'Анатомия',
+      position: 'Ассистент',
+      academicDegree: 'к.м.н.',
+      bio: 'Ассистент кафедры анатомии человека. Молодой перспективный преподаватель, активно участвует в научных конференциях.',
+      subjects: anatomySubject ? [anatomySubject.id] : [],
+    },
+  ];
+
+  for (const teacher of teachers) {
+    const subjectIds = teacher.subjects;
+    const createdTeacher = await prisma.teacher.create({
+      data: {
+        fullName: teacher.fullName,
+        department: teacher.department,
+        position: teacher.position,
+        academicDegree: teacher.academicDegree,
+        bio: teacher.bio,
+        isActive: true,
+        subjects: {
+          create: subjectIds.map((subjectId) => ({
+            subjectId,
+          })),
+        },
+      },
+    });
+    console.log(`✅ Created teacher: ${createdTeacher.fullName}`);
+  }
+
+  console.log(`✅ Created ${teachers.length} sample teachers`);
+
   console.log('🎉 Seeding completed!');
 }
 

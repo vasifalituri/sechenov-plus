@@ -84,6 +84,9 @@ model User {
   externalResources    ExternalResource[] @relation("ResourceCreator")
   createdPolls         Poll[]             @relation("PollCreator")
   pollVotes            PollVote[]         @relation("PollVoter")
+  teacherRatings       TeacherRating[]    @relation("UserTeacherRatings")
+  teacherReviews       TeacherReview[]    @relation("UserTeacherReviews")
+  reviewHelpful        TeacherReviewHelpful[] @relation("UserReviewHelpful")
 
   @@index([email])
   @@index([username])
@@ -102,6 +105,7 @@ model Subject {
   // Relations
   materials         Material[]
   discussionThreads DiscussionThread[]
+  teachers          TeacherSubject[]
 
   @@index([slug])
   @@map("subjects")
@@ -469,4 +473,125 @@ model PollVote {
   @@index([optionId])
   @@index([userId])
   @@map("poll_votes")
+}
+
+// Teacher - Преподаватели университета
+model Teacher {
+  id          String   @id @default(cuid())
+  fullName    String   // ФИО преподавателя
+  department  String   // Кафедра (например, "Анатомия", "Физиология")
+  position    String?  // Должность (профессор, доцент, ассистент)
+  photoUrl    String?  // URL фото преподавателя (Supabase Storage)
+  bio         String?  @db.Text // Краткая биография
+  academicDegree String? // Ученая степень
+  isActive    Boolean  @default(true) // Активен ли профиль
+  
+  // Рассчитываемые поля для производительности
+  averageRating Float   @default(0) // Средний рейтинг
+  totalRatings  Int     @default(0) // Количество оценок
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  ratings  TeacherRating[]
+  reviews  TeacherReview[]
+  subjects TeacherSubject[] // Связь многие-ко-многим с предметами
+  
+  @@index([department])
+  @@index([averageRating])
+  @@index([isActive])
+  @@map("teachers")
+}
+
+// TeacherSubject - Связь преподавателей с предметами
+model TeacherSubject {
+  id        String   @id @default(cuid())
+  teacherId String
+  subjectId String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  @@unique([teacherId, subjectId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@map("teacher_subjects")
+}
+
+// TeacherRating - Рейтинги преподавателей по категориям
+model TeacherRating {
+  id          String   @id @default(cuid())
+  teacherId   String
+  userId      String
+  
+  // Рейтинги по категориям (1-5 звезд)
+  knowledgeRating      Int // Знание предмета
+  teachingRating       Int // Качество преподавания
+  communicationRating  Int // Коммуникабельность
+  fairnessRating       Int // Справедливость в оценках
+  
+  overallRating Float // Общий рейтинг (среднее)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  user    User    @relation("UserTeacherRatings", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teacherId, userId]) // Один пользователь может оценить преподавателя только один раз
+  @@index([teacherId])
+  @@index([userId])
+  @@index([overallRating])
+  @@map("teacher_ratings")
+}
+
+// TeacherReview - Комментарии/отзывы о преподавателях
+model TeacherReview {
+  id        String        @id @default(cuid())
+  teacherId String
+  userId    String
+  content   String        @db.Text
+  isAnonymous Boolean     @default(false) // Анонимный отзыв
+  status    ContentStatus @default(PENDING) // Модерация отзывов
+  
+  // Лайки/дизлайки для полезности отзыва
+  helpfulCount   Int @default(0)
+  unhelpfulCount Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  teacher    Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  user       User                 @relation("UserTeacherReviews", fields: [userId], references: [id], onDelete: Cascade)
+  helpfulness TeacherReviewHelpful[]
+  
+  @@index([teacherId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("teacher_reviews")
+}
+
+// TeacherReviewHelpful - Отметки полезности отзывов
+model TeacherReviewHelpful {
+  id       String  @id @default(cuid())
+  reviewId String
+  userId   String
+  isHelpful Boolean // true = helpful, false = unhelpful
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  review TeacherReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User          @relation("UserReviewHelpful", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
+  @@map("teacher_review_helpful")
 }

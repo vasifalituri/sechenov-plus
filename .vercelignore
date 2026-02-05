@@ -1,0 +1,29 @@
+# Vercel ignore file
+.env.local
+.env*.local
+*.log
+.DS_Store
+node_modules
+.next
+out
+build
+dist
+coverage
+
+# Documentation (not needed in production)
+*.md
+!README.md
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test files
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx

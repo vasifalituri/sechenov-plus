@@ -6,7 +6,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, MessageSquare, User, LogOut, LayoutDashboard, Mail, Bookmark, Link2 } from 'lucide-react';
+import { BookOpen, MessageSquare, User, LogOut, LayoutDashboard, Mail, Bookmark, Link2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -22,6 +22,7 @@ export function Navbar() {
     { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
     { href: '/materials', label: 'Материалы', icon: BookOpen },
     { href: '/discussions', label: 'Обсуждения', icon: MessageSquare },
+    { href: '/teachers', label: 'Преподаватели', icon: Users },
     { href: '/resources', label: 'Ресурсы', icon: Link2 },
     { href: '/bookmarks', label: 'Избранное', icon: Bookmark },
     { href: '/messages', label: 'Сообщения', icon: Mail, badge: unreadCount },
