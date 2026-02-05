@@ -1,0 +1,93 @@
+# ===============================================
+# VERCEL ENVIRONMENT VARIABLES
+# ===============================================
+# Скопируйте эти переменные в Vercel Dashboard
+# Settings -> Environment Variables
+# ===============================================
+
+# ===== ОБЯЗАТЕЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+
+# 1. DATABASE (Neon)
+DATABASE_URL=ЗАМЕНИТЕ_НА_ВАШ_NEON_CONNECTION_STRING
+# Пример: postgresql://user:password@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
+# Получить: https://console.neon.tech -> ваш проект -> Connection string
+
+# 2. NextAuth
+NEXTAUTH_SECRET=СГЕНЕРИРОВАНО_НИЖЕ
+# Сгенерированный ключ (скопируйте из вывода ниже)
+
+NEXTAUTH_URL=https://your-project.vercel.app
+# ВАЖНО: Обновите это значение ПОСЛЕ первого деплоя!
+# Используйте реальный URL вашего проекта
+
+# 3. Supabase Storage (для фото преподавателей)
+NEXT_PUBLIC_SUPABASE_URL=ЗАМЕНИТЕ_НА_ВАШ_SUPABASE_URL
+# Пример: https://xxxxxxxxxxxxx.supabase.co
+# Получить: https://app.supabase.com -> ваш проект -> Settings -> API -> Project URL
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=ЗАМЕНИТЕ_НА_ВАШ_ANON_KEY
+# Получить: Supabase -> Settings -> API -> anon public key
+
+SUPABASE_SERVICE_ROLE_KEY=ЗАМЕНИТЕ_НА_ВАШ_SERVICE_ROLE_KEY
+# Получить: Supabase -> Settings -> API -> service_role key (секретный!)
+
+# ===== ОПЦИОНАЛЬНЫЕ ПЕРЕМЕННЫЕ (Email) =====
+
+# Если хотите отправку email (опционально)
+# EMAIL_SERVER_HOST=smtp.gmail.com
+# EMAIL_SERVER_PORT=587
+# EMAIL_SERVER_USER=your-email@gmail.com
+# EMAIL_SERVER_PASSWORD=your-app-password
+# EMAIL_FROM=noreply@sechenov.plus
+
+# ===============================================
+# ИНСТРУКЦИИ
+# ===============================================
+
+# ШАГ 1: Получите все ключи
+# - Neon: https://console.neon.tech
+# - Supabase: https://app.supabase.com
+# - NEXTAUTH_SECRET: сгенерирован автоматически (см. ниже)
+
+# ШАГ 2: Откройте Vercel
+# https://vercel.com/dashboard
+
+# ШАГ 3: Import проект
+# - Add New -> Project
+# - Import git repository: vasifalituri/sechenov-plus
+# - Root Directory: secka ⚠️ ВАЖНО!
+
+# ШАГ 4: Добавьте переменные
+# - Settings -> Environment Variables
+# - Скопируйте переменные выше (замените ЗАМЕНИТЕ_НА...)
+# - Apply to: Production, Preview, Development
+
+# ШАГ 5: Deploy
+# - Нажмите Deploy
+# - Дождитесь завершения
+
+# ШАГ 6: Обновите NEXTAUTH_URL
+# - Скопируйте URL проекта (например: https://sechenov-plus.vercel.app)
+# - Settings -> Environment Variables
+# - Найдите NEXTAUTH_URL и обновите
+# - Redeploy
+
+# ШАГ 7: Готово!
+# - Откройте ваш сайт
+# - Войдите как admin@sechenov.plus / admin123
+# - СМЕНИТЕ ПАРОЛЬ!
+
+# ===============================================
+# TROUBLESHOOTING
+# ===============================================
+
+# Проблема: Database connection failed
+# Решение: Проверьте DATABASE_URL, должен быть ?sslmode=require
+
+# Проблема: NextAuth error
+# Решение: Обновите NEXTAUTH_URL после деплоя и redeploy
+
+# Проблема: Фото не загружаются
+# Решение: Создайте bucket 'teachers' в Supabase (см. SUPABASE_SETUP.md)
+
+# ===============================================
