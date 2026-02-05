@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // POST /api/teachers/reviews/[reviewId]/helpful - Отметить отзыв как полезный/бесполезный
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
+    const { reviewId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -27,7 +28,7 @@ export async function POST(
 
     // Проверяем существование отзыва
     const review = await prisma.teacherReview.findUnique({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     if (!review) {
@@ -41,7 +42,7 @@ export async function POST(
     const existing = await prisma.teacherReviewHelpful.findUnique({
       where: {
         reviewId_userId: {
-          reviewId: params.reviewId,
+          reviewId: reviewId,
           userId: session.user.id,
         },
       },
@@ -58,7 +59,7 @@ export async function POST(
         // Обновляем счетчики в отзыве
         const delta = isHelpful ? 2 : -2; // Переключение с helpful на unhelpful или наоборот
         await prisma.teacherReview.update({
-          where: { id: params.reviewId },
+          where: { id: reviewId },
           data: {
             helpfulCount: isHelpful ? { increment: 1 } : { decrement: 1 },
             unhelpfulCount: isHelpful ? { decrement: 1 } : { increment: 1 },
@@ -71,7 +72,7 @@ export async function POST(
         });
 
         await prisma.teacherReview.update({
-          where: { id: params.reviewId },
+          where: { id: reviewId },
           data: {
             helpfulCount: isHelpful ? { decrement: 1 } : undefined,
             unhelpfulCount: !isHelpful ? { decrement: 1 } : undefined,
@@ -82,14 +83,14 @@ export async function POST(
       // Создаем новую оценку
       await prisma.teacherReviewHelpful.create({
         data: {
-          reviewId: params.reviewId,
+          reviewId: reviewId,
           userId: session.user.id,
           isHelpful,
         },
       });
 
       await prisma.teacherReview.update({
-        where: { id: params.reviewId },
+        where: { id: reviewId },
         data: {
           helpfulCount: isHelpful ? { increment: 1 } : undefined,
           unhelpfulCount: !isHelpful ? { increment: 1 } : undefined,
@@ -99,7 +100,7 @@ export async function POST(
 
     // Получаем обновленный отзыв
     const updatedReview = await prisma.teacherReview.findUnique({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
       include: {
         helpfulness: {
           where: {

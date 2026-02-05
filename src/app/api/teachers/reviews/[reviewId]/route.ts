@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH /api/teachers/reviews/[reviewId] - Модерация отзыва (только для админов/модераторов)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
+    const { reviewId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -30,7 +31,7 @@ export async function PATCH(
     }
 
     const review = await prisma.teacherReview.update({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
       data: { status },
       include: {
         user: {
@@ -57,9 +58,10 @@ export async function PATCH(
 // DELETE /api/teachers/reviews/[reviewId] - Удалить отзыв
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
+    const { reviewId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -67,7 +69,7 @@ export async function DELETE(
     }
 
     const review = await prisma.teacherReview.findUnique({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     if (!review) {
@@ -88,7 +90,7 @@ export async function DELETE(
     }
 
     await prisma.teacherReview.delete({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     return NextResponse.json({ message: 'Отзыв удален' });
