@@ -12,9 +12,10 @@ const supabase = createClient(
 // POST /api/teachers/[id]/photo - Загрузить фото преподавателя
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -50,7 +51,7 @@ export async function POST(
 
     // Проверяем существование преподавателя
     const teacher = await prisma.teacher.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!teacher) {
@@ -62,7 +63,7 @@ export async function POST(
 
     // Генерируем уникальное имя файла
     const fileExt = file.name.split('.').pop();
-    const fileName = `${params.id}-${Date.now()}.${fileExt}`;
+    const fileName = `${id}-${Date.now()}.${fileExt}`;
     const filePath = `teachers/${fileName}`;
 
     // Конвертируем File в ArrayBuffer для Supabase
@@ -102,7 +103,7 @@ export async function POST(
 
     // Обновляем URL фото в базе данных
     const updatedTeacher = await prisma.teacher.update({
-      where: { id: params.id },
+      where: { id },
       data: { photoUrl },
     });
 
