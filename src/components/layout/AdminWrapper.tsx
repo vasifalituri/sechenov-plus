@@ -4,13 +4,14 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { SessionProvider } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone } from 'lucide-react';
+import { Home, Users, FileText, MessageSquare, BarChart3, Megaphone, GraduationCap } from 'lucide-react';
 
 export function AdminWrapper({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: '/admin', label: 'Панель управления', icon: Home, adminOnly: false },
     { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: false },
     { href: '/admin/materials', label: 'Материалы', icon: FileText, adminOnly: false },
+    { href: '/admin/quiz', label: 'Тесты ЦТ', icon: GraduationCap, adminOnly: false },
     { href: '/admin/discussions', label: 'Обсуждения', icon: MessageSquare, adminOnly: false },
     { href: '/admin/polls', label: 'Голосования', icon: BarChart3, adminOnly: false },
     { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3, adminOnly: false },

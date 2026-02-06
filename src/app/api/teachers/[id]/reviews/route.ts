@@ -111,14 +111,14 @@ export async function POST(
       );
     }
 
-    // Создаем отзыв (по умолчанию PENDING для модерации)
+    // Создаем отзыв (сразу публикуем)
     const review = await prisma.teacherReview.create({
       data: {
         teacherId: id,
         userId: session.user.id,
         content: content.trim(),
         isAnonymous: isAnonymous || false,
-        status: 'PENDING',
+        status: 'APPROVED',
       },
       include: {
         user: {

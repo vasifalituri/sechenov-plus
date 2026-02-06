@@ -49,6 +49,17 @@ enum StorageType {
   LOCAL // Legacy: files in local filesystem (for migration)
 }
 
+enum QuizMode {
+  RANDOM_30    // Режим 1: 30 случайных вопросов
+  BLOCK        // Режим 2: Тематический блок
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 // Models
 model User {
   id            String     @id @default(uuid())
@@ -87,6 +98,7 @@ model User {
   teacherRatings       TeacherRating[]    @relation("UserTeacherRatings")
   teacherReviews       TeacherReview[]    @relation("UserTeacherReviews")
   reviewHelpful        TeacherReviewHelpful[] @relation("UserReviewHelpful")
+  quizAttempts         QuizAttempt[]      // Попытки прохождения тестов
 
   @@index([email])
   @@index([username])
@@ -106,6 +118,9 @@ model Subject {
   materials         Material[]
   discussionThreads DiscussionThread[]
   teachers          TeacherSubject[]
+  quizBlocks        QuizBlock[]        // Тематические блоки тестов
+  quizQuestions     QuizQuestion[]     // Вопросы по предмету
+  quizAttempts      QuizAttempt[]      // Попытки прохождения случайных тестов
 
   @@index([slug])
   @@map("subjects")
@@ -594,4 +609,154 @@ model TeacherReviewHelpful {
   @@index([reviewId])
   @@index([userId])
   @@map("teacher_review_helpful")
+}
+
+// ============================================
+// QUIZ SYSTEM - Система тестирования для ЦТ
+// ============================================
+
+// QuizBlock - Тематический блок вопросов (50-300 вопросов)
+model QuizBlock {
+  id          String   @id @default(cuid())
+  title       String   // Название блока (например, "Анатомия: Система кровообращения")
+  description String?  @db.Text // Описание блока
+  subjectId   String   // Связь с предметом
+  
+  // Метаданные
+  questionCount Int    @default(0) // Количество вопросов в блоке
+  difficulty    QuestionDifficulty @default(MEDIUM) // Сложность блока
+  isActive      Boolean @default(true) // Активен ли блок
+  orderIndex    Int     @default(0) // Порядок сортировки
+  
+  // Статистика
+  totalAttempts Int @default(0) // Сколько раз проходили
+  averageScore  Float @default(0) // Средний балл
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+  
+  @@index([subjectId])
+  @@index([isActive])
+  @@index([difficulty])
+  @@index([orderIndex])
+  @@map("quiz_blocks")
+}
+
+// QuizQuestion - Вопрос для теста
+model QuizQuestion {
+  id          String   @id @default(cuid())
+  blockId     String?  // Принадлежность к блоку (может быть null для общего банка)
+  subjectId   String   // Предмет (для быстрого поиска)
+  
+  // Содержание вопроса
+  questionText String @db.Text // Текст вопроса
+  questionImage String? // URL изображения (если есть)
+  explanation  String? @db.Text // Объяснение правильного ответа
+  
+  // Варианты ответа (A, B, C, D, E)
+  optionA String @db.Text
+  optionB String @db.Text
+  optionC String @db.Text
+  optionD String @db.Text
+  optionE String? @db.Text // Может быть 4 или 5 вариантов
+  
+  // Правильный ответ
+  correctAnswer String // "A", "B", "C", "D", или "E"
+  
+  // Метаданные
+  difficulty QuestionDifficulty @default(MEDIUM)
+  isActive   Boolean @default(true)
+  tags       String[] // Теги для дополнительной фильтрации
+  
+  // Статистика использования
+  timesShown    Int @default(0) // Сколько раз показывали
+  timesCorrect  Int @default(0) // Сколько раз ответили правильно
+  timesWrong    Int @default(0) // Сколько раз ответили неправильно
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  block    QuizBlock?   @relation(fields: [blockId], references: [id], onDelete: SetNull)
+  subject  Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[]
+  
+  @@index([blockId])
+  @@index([subjectId])
+  @@index([isActive])
+  @@index([difficulty])
+  @@index([correctAnswer])
+  @@map("quiz_questions")
+}
+
+// QuizAttempt - Попытка прохождения теста
+model QuizAttempt {
+  id       String   @id @default(cuid())
+  userId   String
+  mode     QuizMode // RANDOM_30 или BLOCK
+  
+  // Если режим BLOCK
+  blockId  String?  // ID блока (null для RANDOM_30)
+  
+  // Если режим RANDOM_30
+  subjectId String? // ID предмета (для случайной выборки)
+  
+  // Результаты
+  totalQuestions  Int // Всего вопросов
+  correctAnswers  Int // Правильных ответов
+  wrongAnswers    Int // Неправильных ответов
+  skippedAnswers  Int @default(0) // Пропущенных
+  score           Float // Процент правильных ответов
+  
+  // Время
+  startedAt   DateTime  @default(now())
+  completedAt DateTime? // null если не завершен
+  timeSpent   Int?      // Время в секундах
+  
+  // Состояние
+  isCompleted Boolean @default(false)
+  
+  // Relations
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  block   QuizBlock?   @relation(fields: [blockId], references: [id], onDelete: SetNull)
+  subject Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  answers QuizAnswer[]
+  
+  @@index([userId])
+  @@index([mode])
+  @@index([blockId])
+  @@index([subjectId])
+  @@index([isCompleted])
+  @@index([startedAt])
+  @@index([score])
+  @@map("quiz_attempts")
+}
+
+// QuizAnswer - Ответ пользователя на вопрос
+model QuizAnswer {
+  id         String   @id @default(cuid())
+  attemptId  String
+  questionId String
+  
+  // Ответ пользователя
+  userAnswer    String? // "A", "B", "C", "D", "E" или null (пропущен)
+  isCorrect     Boolean
+  timeSpent     Int?    // Время на вопрос в секундах
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@unique([attemptId, questionId]) // Один ответ на вопрос в попытке
+  @@index([attemptId])
+  @@index([questionId])
+  @@index([isCorrect])
+  @@map("quiz_answers")
 }
