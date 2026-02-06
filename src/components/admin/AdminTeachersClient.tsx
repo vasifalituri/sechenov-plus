@@ -43,15 +43,28 @@ export default function AdminTeachersClient() {
 
       if (teachersRes.ok) {
         const teachersData = await teachersRes.json();
-        setTeachers(teachersData);
+        // Убедимся, что teachersData - это массив
+        setTeachers(Array.isArray(teachersData) ? teachersData : []);
+      } else {
+        console.error('Teachers API error:', await teachersRes.text());
+        setTeachers([]);
       }
 
       if (subjectsRes.ok) {
         const subjectsData = await subjectsRes.json();
-        setSubjects(subjectsData);
+        // API возвращает { success, data }, извлекаем массив
+        const subjectsArray = subjectsData.data || subjectsData;
+        // Убедимся, что это массив
+        setSubjects(Array.isArray(subjectsArray) ? subjectsArray : []);
+      } else {
+        console.error('Subjects API error:', await subjectsRes.text());
+        setSubjects([]);
       }
     } catch (error) {
+      console.error('Error fetching data:', error);
       toast.error('Ошибка загрузки данных');
+      setTeachers([]);
+      setSubjects([]);
     } finally {
       setIsLoading(false);
     }
@@ -213,63 +226,72 @@ export default function AdminTeachersClient() {
       </div>
 
       <div className="grid gap-4">
-        {teachers.map((teacher) => (
-          <Card key={teacher.id} className="p-4">
-            <div className="flex items-center gap-4">
-              {teacher.photoUrl && (
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
-                  <Image
-                    src={teacher.photoUrl}
-                    alt={teacher.fullName}
-                    width={64}
-                    height={64}
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <h3 className="font-semibold">{teacher.fullName}</h3>
-                <p className="text-sm text-gray-600">{teacher.department}</p>
-                {teacher.position && (
-                  <p className="text-sm text-gray-500">{teacher.position}</p>
-                )}
-                <div className="flex gap-2 mt-1">
-                  <span className="text-sm">
-                    ⭐ {teacher.averageRating.toFixed(1)} ({teacher.totalRatings})
-                  </span>
-                  {!teacher.isActive && (
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">
-                      Неактивен
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.open(`/teachers/${teacher.id}`, '_blank')}
-                >
-                  <Eye size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleOpenDialog(teacher)}
-                >
-                  <Edit size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(teacher.id)}
-                >
-                  <Trash2 size={16} className="text-red-500" />
-                </Button>
-              </div>
+        {teachers.length === 0 ? (
+          <Card className="p-8">
+            <div className="text-center text-gray-500">
+              <p className="mb-2">Преподаватели не найдены</p>
+              <p className="text-sm">Нажмите "Добавить преподавателя" чтобы создать первый профиль</p>
             </div>
           </Card>
-        ))}
+        ) : (
+          teachers.map((teacher) => (
+            <Card key={teacher.id} className="p-4">
+              <div className="flex items-center gap-4">
+                {teacher.photoUrl && (
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+                    <Image
+                      src={teacher.photoUrl}
+                      alt={teacher.fullName}
+                      width={64}
+                      height={64}
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-semibold">{teacher.fullName}</h3>
+                  <p className="text-sm text-gray-600">{teacher.department}</p>
+                  {teacher.position && (
+                    <p className="text-sm text-gray-500">{teacher.position}</p>
+                  )}
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-sm">
+                      ⭐ {teacher.averageRating.toFixed(1)} ({teacher.totalRatings})
+                    </span>
+                    {!teacher.isActive && (
+                      <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">
+                        Неактивен
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(`/teachers/${teacher.id}`, '_blank')}
+                  >
+                    <Eye size={16} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenDialog(teacher)}
+                  >
+                    <Edit size={16} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(teacher.id)}
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Диалог добавления/редактирования */}
