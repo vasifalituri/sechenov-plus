@@ -12,8 +12,9 @@ export const metadata: Metadata = {
 export default async function TeacherProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -21,7 +22,7 @@ export default async function TeacherProfilePage({
   }
 
   const teacher = await prisma.teacher.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       subjects: {
         include: {
@@ -83,7 +84,7 @@ export default async function TeacherProfilePage({
   const userRating = await prisma.teacherRating.findUnique({
     where: {
       teacherId_userId: {
-        teacherId: params.id,
+        teacherId: id,
         userId: session.user.id,
       },
     },
