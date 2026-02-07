@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/quiz/submit - Отправить ответы на тест
@@ -59,8 +59,15 @@ export async function POST(req: NextRequest) {
 
     const answerRecords = answers.map((answer: any) => {
       const correctAnswer = correctAnswersMap.get(answer.questionId);
-      const isCorrect = answer.userAnswer === correctAnswer;
       const isSkipped = !answer.userAnswer;
+      
+      // Для множественных ответов нужно сравнивать отсортированные строки
+      let isCorrect = false;
+      if (answer.userAnswer && correctAnswer) {
+        const userAnswerSorted = answer.userAnswer.split(',').sort().join(',');
+        const correctAnswerSorted = correctAnswer.split(',').sort().join(',');
+        isCorrect = userAnswerSorted === correctAnswerSorted;
+      }
 
       if (isSkipped) {
         skippedCount++;

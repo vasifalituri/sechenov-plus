@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/quiz/attempt/[id] - Получить детали попытки
@@ -26,6 +26,7 @@ export async function GET(
                 id: true,
                 questionText: true,
                 questionImage: true,
+                questionType: true,
                 optionA: true,
                 optionB: true,
                 optionC: true,

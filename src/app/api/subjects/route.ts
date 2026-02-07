@@ -5,9 +5,17 @@ export async function GET() {
   try {
     const subjects = await prisma.subject.findMany({
       orderBy: { order: 'asc' },
+      include: {
+        _count: {
+          select: {
+            quizBlocks: true,
+            quizQuestions: true,
+          }
+        }
+      }
     });
 
-    return NextResponse.json({ success: true, data: subjects });
+    return NextResponse.json(subjects);
   } catch (error) {
     console.error('Error fetching subjects:', error);
     return NextResponse.json(

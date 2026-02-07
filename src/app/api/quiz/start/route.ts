@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/quiz/start - Начать прохождение теста
@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
       id: q.id,
       questionText: q.questionText || q.question_text,
       questionImage: q.questionImage || q.question_image,
+      questionType: q.questionType || q.question_type || 'SINGLE',
       optionA: q.optionA || q.option_a,
       optionB: q.optionB || q.option_b,
       optionC: q.optionC || q.option_c,

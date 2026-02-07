@@ -54,6 +54,11 @@ enum QuizMode {
   BLOCK        // Режим 2: Тематический блок
 }
 
+enum QuestionType {
+  SINGLE    // Один правильный ответ
+  MULTIPLE  // Несколько правильных ответов
+}
+
 enum QuestionDifficulty {
   EASY
   MEDIUM
@@ -666,7 +671,8 @@ model QuizQuestion {
   optionE String? @db.Text // Может быть 4 или 5 вариантов
   
   // Правильный ответ
-  correctAnswer String // "A", "B", "C", "D", или "E"
+  correctAnswer String // "a", "b", "c", "d", "e" или "a,b,c" для множественных
+  questionType  QuestionType @default(SINGLE) // SINGLE или MULTIPLE
   
   // Метаданные
   difficulty QuestionDifficulty @default(MEDIUM)
@@ -744,7 +750,7 @@ model QuizAnswer {
   questionId String
   
   // Ответ пользователя
-  userAnswer    String? // "A", "B", "C", "D", "E" или null (пропущен)
+  userAnswer    String? // "a", "b", "c" или "a,b,c" для множественных, или null (пропущен)
   isCorrect     Boolean
   timeSpent     Int?    // Время на вопрос в секундах
   
