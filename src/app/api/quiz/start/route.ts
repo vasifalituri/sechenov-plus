@@ -43,14 +43,20 @@ export async function POST(req: NextRequest) {
 
     if (mode === 'RANDOM_30') {
       // Режим 1: 30 случайных вопросов из предмета
-      questions = await prisma.$queryRaw<any[]>`
-        SELECT * FROM quiz_questions
-        WHERE subject_id = ${subjectId}
-        AND is_active = true
-        ORDER BY RANDOM()
-        LIMIT 30
-      `;
-      totalQuestions = 30;
+      questions = await prisma.quizQuestion.findMany({
+        where: {
+          subjectId: subjectId,
+          isActive: true
+        },
+        take: 30,
+        orderBy: {
+          id: 'asc' // Используем детерминированный порядок, затем перемешаем в коде
+        }
+      });
+      
+      // Перемешиваем вопросы
+      questions = questions.sort(() => Math.random() - 0.5);
+      totalQuestions = Math.min(questions.length, 30);
     } else {
       // Режим 2: Все вопросы из блока
       const block = await prisma.quizBlock.findUnique({
@@ -108,14 +114,14 @@ export async function POST(req: NextRequest) {
     // Возвращаем попытку и вопросы (без правильных ответов!)
     const questionsForStudent = questions.map((q: any) => ({
       id: q.id,
-      questionText: q.questionText || q.question_text,
-      questionImage: q.questionImage || q.question_image,
-      questionType: q.questionType || q.question_type || 'SINGLE',
-      optionA: q.optionA || q.option_a,
-      optionB: q.optionB || q.option_b,
-      optionC: q.optionC || q.option_c,
-      optionD: q.optionD || q.option_d,
-      optionE: q.optionE || q.option_e,
+      questionText: q.questionText,
+      questionImage: q.questionImage,
+      questionType: q.questionType,
+      optionA: q.optionA,
+      optionB: q.optionB,
+      optionC: q.optionC,
+      optionD: q.optionD,
+      optionE: q.optionE,
       // НЕ отправляем correctAnswer и explanation!
     }));
 
