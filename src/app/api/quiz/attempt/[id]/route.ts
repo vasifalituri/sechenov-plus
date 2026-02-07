@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // GET /api/quiz/attempt/[id] - Получить детали попытки
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,8 +14,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const attempt = await prisma.quizAttempt.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         subject: true,
         block: true,

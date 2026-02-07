@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // GET /api/admin/quiz/questions/[id]
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,8 +14,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const question = await prisma.quizQuestion.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         subject: true,
         block: true
@@ -39,7 +40,7 @@ export async function GET(
 // PATCH /api/admin/quiz/questions/[id] - Обновить вопрос
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -47,10 +48,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await req.json();
 
     const question = await prisma.quizQuestion.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(body.blockId !== undefined && { blockId: body.blockId }),
         ...(body.subjectId !== undefined && { subjectId: body.subjectId }),
@@ -86,7 +88,7 @@ export async function PATCH(
 // DELETE /api/admin/quiz/questions/[id]
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -94,13 +96,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const question = await prisma.quizQuestion.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { blockId: true }
     });
 
     await prisma.quizQuestion.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     // Обновить счетчик вопросов в блоке

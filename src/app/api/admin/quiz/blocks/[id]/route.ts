@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // GET /api/admin/quiz/blocks/[id] - Получить блок по ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,8 +14,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const block = await prisma.quizBlock.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         subject: true,
         questions: {
@@ -44,7 +45,7 @@ export async function GET(
 // PATCH /api/admin/quiz/blocks/[id] - Обновить блок
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,11 +53,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await req.json();
     const { title, description, difficulty, isActive, orderIndex } = body;
 
     const block = await prisma.quizBlock.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(title !== undefined && { title }),
         ...(description !== undefined && { description }),
@@ -82,7 +84,7 @@ export async function PATCH(
 // DELETE /api/admin/quiz/blocks/[id] - Удалить блок
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -90,8 +92,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     await prisma.quizBlock.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ success: true });
