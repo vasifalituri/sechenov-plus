@@ -152,7 +152,7 @@ export default function QuizResultsListClient() {
           </p>
           {results.length === 0 && !selectedMode && (
             <Button 
-              onClick={() => router.push('/quiz')}
+              onClick={() => router.push('/ct')}
               className="mt-4"
             >
               Перейти к тестам
@@ -215,7 +215,7 @@ export default function QuizResultsListClient() {
                   </div>
 
                   <Button
-                    onClick={() => router.push(`/quiz/result/${attempt.id}`)}
+                    onClick={() => router.push(`/ct/result/${attempt.id}`)}
                     variant="outline"
                   >
                     <Eye className="w-4 h-4 mr-2" />

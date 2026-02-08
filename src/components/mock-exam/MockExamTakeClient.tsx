@@ -61,7 +61,7 @@ export default function MockExamTakeClient({ attemptId }: MockExamTakeClientProp
       const data = await response.json();
       
       if (data.isCompleted) {
-        router.push(`/mock-exam/result/${attemptId}`);
+        router.push(`/ct/result/${attemptId}`);
         return;
       }
       
@@ -78,7 +78,7 @@ export default function MockExamTakeClient({ attemptId }: MockExamTakeClientProp
     } catch (error) {
       console.error('Error fetching attempt:', error);
       toast.error('Не удалось загрузить тест');
-      router.push('/mock-exam');
+      router.push('/ct');
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ export default function MockExamTakeClient({ attemptId }: MockExamTakeClientProp
       
       const data = await response.json();
       toast.success('Тест завершен!');
-      router.push(`/mock-exam/result/${attemptId}`);
+      router.push(`/ct/result/${attemptId}`);
     } catch (error) {
       console.error('Error submitting test:', error);
       toast.error('Не удалось отправить ответы');

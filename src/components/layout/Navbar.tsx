@@ -21,8 +21,7 @@ export function Navbar() {
   const navItems = [
     { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
     { href: '/materials', label: 'Материалы', icon: BookOpen },
-    { href: '/quiz', label: 'Тесты ЦТ', icon: GraduationCap },
-    { href: '/mock-exam', label: 'Пробное ЦТ', icon: GraduationCap },
+    { href: '/ct', label: 'ЦТ', icon: GraduationCap },
     { href: '/discussions', label: 'Обсуждения', icon: MessageSquare },
     { href: '/teachers', label: 'Преподаватели', icon: Users },
     { href: '/resources', label: 'Ресурсы', icon: Link2 },

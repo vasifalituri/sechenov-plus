@@ -49,7 +49,7 @@ export default function MockExamClient() {
   }
 
   const handleSubjectClick = (subjectId: string, subjectSlug: string) => {
-    router.push(`/mock-exam/${subjectSlug}`);
+    router.push(`/ct/${subjectSlug}`);
   };
 
   if (loading) {

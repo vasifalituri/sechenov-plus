@@ -51,7 +51,7 @@ export default function MockExamModeSelector({ subjectSlug }: MockExamModeSelect
       
       if (!foundSubject) {
         toast.error('Дисциплина не найдена');
-        router.push('/mock-exam');
+        router.push('/ct');
         return;
       }
       
@@ -87,7 +87,7 @@ export default function MockExamModeSelector({ subjectSlug }: MockExamModeSelect
       if (!response.ok) throw new Error('Failed to start test');
       
       const data = await response.json();
-      router.push(`/mock-exam/take/${data.attemptId}`);
+      router.push(`/ct/take/${data.attemptId}`);
     } catch (error) {
       console.error('Error starting test:', error);
       toast.error('Не удалось начать тест');
@@ -108,7 +108,7 @@ export default function MockExamModeSelector({ subjectSlug }: MockExamModeSelect
       if (!response.ok) throw new Error('Failed to start test');
       
       const data = await response.json();
-      router.push(`/mock-exam/take/${data.attemptId}`);
+      router.push(`/ct/take/${data.attemptId}`);
     } catch (error) {
       console.error('Error starting test:', error);
       toast.error('Не удалось начать тест');

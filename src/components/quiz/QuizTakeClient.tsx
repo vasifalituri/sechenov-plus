@@ -53,7 +53,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
         setQuiz(JSON.parse(cachedQuiz));
       } else {
         toast.error('Тест не найден');
-        router.push('/quiz');
+        router.push('/ct');
       }
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -97,7 +97,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       if (res.ok) {
         localStorage.removeItem(`quiz_${attemptId}`);
         toast.success('Тест завершен!');
-        router.push(`/quiz/result/${attemptId}`);
+        router.push(`/ct/result/${attemptId}`);
       } else {
         const error = await res.json();
         toast.error(error.error || 'Ошибка отправки');

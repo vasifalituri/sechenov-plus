@@ -101,7 +101,7 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
           </div>
 
           <div className="flex gap-3 justify-center">
-            <Button onClick={() => router.push('/quiz')} variant="outline">
+            <Button onClick={() => router.push('/ct')} variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               К тестам
             </Button>
@@ -226,9 +226,9 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
 
       {/* Кнопки внизу */}
       <div className="flex gap-3 justify-center pb-8">
-        <Button onClick={() => router.push('/quiz')} variant="outline">
+        <Button onClick={() => router.push('/ct')} variant="outline">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          К выбору тестов
+          Вернуться к тестам
         </Button>
         <Button 
           onClick={() => {

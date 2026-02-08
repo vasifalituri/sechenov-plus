@@ -150,7 +150,7 @@ export default function QuizMainClient() {
             <div className="md:col-span-2">
               <Button
                 variant="outline"
-                onClick={() => router.push('/quiz/results')}
+                onClick={() => router.push('/ct/results')}
                 className="w-full"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />

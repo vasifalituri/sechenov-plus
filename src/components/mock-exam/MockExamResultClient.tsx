@@ -73,7 +73,7 @@ export default function MockExamResultClient({ attemptId }: MockExamResultClient
       const data = await response.json();
       
       if (!data.isCompleted) {
-        router.push(`/mock-exam/take/${attemptId}`);
+        router.push(`/ct/take/${attemptId}`);
         return;
       }
       
@@ -81,7 +81,7 @@ export default function MockExamResultClient({ attemptId }: MockExamResultClient
     } catch (error) {
       console.error('Error fetching result:', error);
       toast.error('Не удалось загрузить результаты');
-      router.push('/mock-exam');
+      router.push('/ct');
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function MockExamResultClient({ attemptId }: MockExamResultClient
       if (!response.ok) throw new Error('Failed to start new test');
       
       const data = await response.json();
-      router.push(`/mock-exam/take/${data.attemptId}`);
+      router.push(`/ct/take/${data.attemptId}`);
     } catch (error) {
       console.error('Error retaking test:', error);
       toast.error('Не удалось начать новую попытку');
@@ -274,7 +274,7 @@ export default function MockExamResultClient({ attemptId }: MockExamResultClient
         <Button
           variant="outline"
           size="lg"
-          onClick={() => router.push('/mock-exam')}
+          onClick={() => router.push('/ct')}
           className="gap-2"
         >
           <Home className="w-4 h-4" />
