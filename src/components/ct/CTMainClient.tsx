@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Zap, BookOpen } from 'lucide-react';
 import QuizMainClient from '@/components/quiz/QuizMainClient';
-import MockExamClient from '@/components/mock-exam/MockExamClient';
+import QuickTestClient from '@/components/ct/QuickTestClient';
 
 export default function CTMainClient() {
   const [activeTab, setActiveTab] = useState('quick');
@@ -30,7 +30,7 @@ export default function CTMainClient() {
               30 случайных вопросов по выбранной дисциплине
             </p>
           </div>
-          <MockExamClient />
+          <QuickTestClient />
         </TabsContent>
 
         <TabsContent value="thematic" className="mt-6">
