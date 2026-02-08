@@ -67,14 +67,17 @@ export default function QuickTestClient() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to start test');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to start test');
+      }
       
       const data = await response.json();
       toast.success('Тест начат!');
       router.push(`/ct/take/${data.attemptId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting test:', error);
-      toast.error('Не удалось начать тест');
+      toast.error(error.message || 'Не удалось начать тест');
       setStartingTest(null);
     }
   };
