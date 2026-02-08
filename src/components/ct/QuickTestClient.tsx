@@ -73,6 +73,10 @@ export default function QuickTestClient() {
       }
       
       const data = await response.json();
+      
+      // Сохраняем данные теста в localStorage для QuizTakeClient
+      localStorage.setItem(`quiz_${data.attemptId}`, JSON.stringify(data));
+      
       toast.success('Тест начат!');
       router.push(`/ct/take/${data.attemptId}`);
     } catch (error: any) {
