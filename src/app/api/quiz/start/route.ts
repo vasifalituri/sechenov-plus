@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { mode, blockId, subjectId } = body;
 
+    console.log('Quiz start request:', { mode, blockId, subjectId });
+
     // Валидация режима
     if (!mode || !['RANDOM_30', 'BLOCK'].includes(mode)) {
       return NextResponse.json(
@@ -57,6 +59,8 @@ export async function POST(req: NextRequest) {
       // Перемешиваем вопросы
       questions = questions.sort(() => Math.random() - 0.5);
       totalQuestions = Math.min(questions.length, 30);
+      
+      console.log(`Found ${questions.length} questions for subjectId: ${subjectId}`);
     } else {
       // Режим 2: Все вопросы из блока
       const block = await prisma.quizBlock.findUnique({
