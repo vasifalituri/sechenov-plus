@@ -175,14 +175,14 @@ export default function QuickTestClient() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Всего вопросов:</span>
+                <span className="text-gray-600 dark:text-gray-400">Всего вопросов:</span>
                 <span className="font-semibold">
                   {subject._count?.quizQuestions || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">В тесте:</span>
-                <span className="font-semibold text-blue-600">30 случайных</span>
+                <span className="text-gray-600 dark:text-gray-400">В тесте:</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">30 случайных</span>
               </div>
               <Button
                 className="w-full mt-4"
