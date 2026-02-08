@@ -85,11 +85,11 @@ export default function QuickTestClient() {
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -120,11 +120,11 @@ export default function QuickTestClient() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Target className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Доступно дисциплин</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Доступно дисциплин</p>
                 <p className="text-2xl font-bold">{subjects.length}</p>
               </div>
             </div>
@@ -134,11 +134,11 @@ export default function QuickTestClient() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Zap className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                <Zap className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Вопросов в тесте</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Вопросов в тесте</p>
                 <p className="text-2xl font-bold">30</p>
               </div>
             </div>
@@ -148,11 +148,11 @@ export default function QuickTestClient() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Случайный выбор</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Случайный выбор</p>
                 <p className="text-2xl font-bold">✓</p>
               </div>
             </div>
