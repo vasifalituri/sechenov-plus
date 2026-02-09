@@ -53,49 +53,25 @@ export default function CTSubjectBlocksClient({
   async function load() {
     setLoading(true);
     try {
-      const subjectsRes = await fetch('/api/subjects');
-      if (!subjectsRes.ok) throw new Error('Failed to fetch subjects');
-      const subjectsData = await subjectsRes.json();
-      const list: any[] = Array.isArray(subjectsData) ? subjectsData : subjectsData.data;
-
-      const candidates = new Set<string>();
-
-      if (rawSlug) {
-        candidates.add(rawSlug);
-        candidates.add(rawSlug.trim());
-        candidates.add(rawSlug.trim().toLowerCase());
+      if (!rawSlug) {
+        toast.error('Не передан параметр дисциплины');
+        router.push('/ct');
+        return;
       }
-      if (normalizedSlug) {
-        candidates.add(normalizedSlug);
-        candidates.add(normalizedSlug.trim());
-        candidates.add(normalizedSlug.trim().toLowerCase());
-      }
-      try {
-        if (rawSlug) {
-          candidates.add(decodeURIComponent(rawSlug).trim());
-          candidates.add(decodeURIComponent(rawSlug).trim().toLowerCase());
-        }
-      } catch {}
-      try {
-        if (rawSlug) {
-          candidates.add(encodeURIComponent(rawSlug).trim());
-          candidates.add(encodeURIComponent(rawSlug).trim().toLowerCase());
-        }
-      } catch {}
 
-      const found = list.find((s) => {
-        const slug = String(s.slug || '').trim();
-        return candidates.has(slug) || candidates.has(slug.toLowerCase());
-      });
-      if (!found) {
+      const subjectRes = await fetch(`/api/subjects?slug=${encodeURIComponent(rawSlug)}`);
+      if (subjectRes.status === 404) {
         toast.error('Дисциплина не найдена');
         router.push('/ct');
         return;
       }
+      if (!subjectRes.ok) throw new Error('Failed to fetch subject');
+
+      const found: Subject = await subjectRes.json();
       setSubject({ id: found.id, name: found.name, slug: found.slug });
 
       const blocksRes = await fetch(`/api/quiz/blocks?subjectId=${found.id}`);
-      if (!blocksRes.ok) throw new Error('Failed to fetch blocks');
+
       const blocksData = await blocksRes.json();
       setBlocks(Array.isArray(blocksData) ? blocksData : blocksData.data);
     } catch (e) {

@@ -47,47 +47,21 @@ export default function CTSubjectModeClient({
   async function loadSubject() {
     setLoading(true);
     try {
-      const res = await fetch('/api/subjects');
-      if (!res.ok) throw new Error('Failed to fetch subjects');
-      const data = await res.json();
-      const list: Subject[] = Array.isArray(data) ? data : data.data;
-
-      const candidates = new Set<string>();
-
-      if (rawSlug) {
-        candidates.add(rawSlug);
-        candidates.add(rawSlug.trim());
-        candidates.add(rawSlug.trim().toLowerCase());
-      }
-      if (normalizedSlug) {
-        candidates.add(normalizedSlug);
-        candidates.add(normalizedSlug.trim());
-        candidates.add(normalizedSlug.trim().toLowerCase());
+      if (!rawSlug) {
+        toast.error('Не передан параметр дисциплины');
+        router.push('/ct');
+        return;
       }
 
-      // Try matching raw/decode/encoded variants (handles unicode/cyrillic and edge cases)
-      try {
-        if (rawSlug) {
-          candidates.add(decodeURIComponent(rawSlug).trim());
-          candidates.add(decodeURIComponent(rawSlug).trim().toLowerCase());
-        }
-      } catch {}
-      try {
-        if (rawSlug) {
-          candidates.add(encodeURIComponent(rawSlug).trim());
-          candidates.add(encodeURIComponent(rawSlug).trim().toLowerCase());
-        }
-      } catch {}
-
-      const found = list.find((s) => {
-        const slug = (s.slug || '').trim();
-        return candidates.has(slug) || candidates.has(slug.toLowerCase());
-      });
-      if (!found) {
+      const res = await fetch(`/api/subjects?slug=${encodeURIComponent(rawSlug)}`);
+      if (res.status === 404) {
         toast.error('Дисциплина не найдена');
         router.push('/ct');
         return;
       }
+      if (!res.ok) throw new Error('Failed to fetch subject');
+
+      const found: Subject = await res.json();
       setSubject(found);
     } catch (e) {
       console.error(e);
