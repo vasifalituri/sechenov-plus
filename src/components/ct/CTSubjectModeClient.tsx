@@ -24,7 +24,14 @@ export default function CTSubjectModeClient({ subjectSlug }: { subjectSlug: stri
   const [loading, setLoading] = useState(true);
   const [startingQuick, setStartingQuick] = useState(false);
 
-  const normalizedSlug = useMemo(() => decodeURIComponent(subjectSlug), [subjectSlug]);
+  const normalizedSlug = useMemo(() => {
+    // Next.js params are usually already decoded, but we guard against double-decoding
+    try {
+      return decodeURIComponent(subjectSlug).trim().toLowerCase();
+    } catch {
+      return subjectSlug.trim().toLowerCase();
+    }
+  }, [subjectSlug]);
 
   useEffect(() => {
     void loadSubject();
@@ -38,7 +45,30 @@ export default function CTSubjectModeClient({ subjectSlug }: { subjectSlug: stri
       if (!res.ok) throw new Error('Failed to fetch subjects');
       const data = await res.json();
       const list: Subject[] = Array.isArray(data) ? data : data.data;
-      const found = list.find((s) => s.slug === normalizedSlug);
+
+      const candidates = new Set<string>([
+        subjectSlug,
+        normalizedSlug,
+        subjectSlug.trim(),
+        normalizedSlug.trim(),
+        subjectSlug.trim().toLowerCase(),
+        normalizedSlug.trim().toLowerCase(),
+      ]);
+
+      // Try matching raw/decode/encoded variants (handles unicode/cyrillic and edge cases)
+      try {
+        candidates.add(decodeURIComponent(subjectSlug).trim());
+        candidates.add(decodeURIComponent(subjectSlug).trim().toLowerCase());
+      } catch {}
+      try {
+        candidates.add(encodeURIComponent(subjectSlug).trim());
+        candidates.add(encodeURIComponent(subjectSlug).trim().toLowerCase());
+      } catch {}
+
+      const found = list.find((s) => {
+        const slug = (s.slug || '').trim();
+        return candidates.has(slug) || candidates.has(slug.toLowerCase());
+      });
       if (!found) {
         toast.error('Дисциплина не найдена');
         router.push('/ct');

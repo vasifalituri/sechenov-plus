@@ -26,7 +26,13 @@ interface QuizBlock {
 
 export default function CTSubjectBlocksClient({ subjectSlug }: { subjectSlug: string }) {
   const router = useRouter();
-  const normalizedSlug = useMemo(() => decodeURIComponent(subjectSlug), [subjectSlug]);
+  const normalizedSlug = useMemo(() => {
+    try {
+      return decodeURIComponent(subjectSlug).trim().toLowerCase();
+    } catch {
+      return subjectSlug.trim().toLowerCase();
+    }
+  }, [subjectSlug]);
 
   const [subject, setSubject] = useState<Subject | null>(null);
   const [blocks, setBlocks] = useState<QuizBlock[]>([]);
@@ -45,7 +51,28 @@ export default function CTSubjectBlocksClient({ subjectSlug }: { subjectSlug: st
       if (!subjectsRes.ok) throw new Error('Failed to fetch subjects');
       const subjectsData = await subjectsRes.json();
       const list: any[] = Array.isArray(subjectsData) ? subjectsData : subjectsData.data;
-      const found = list.find((s) => s.slug === normalizedSlug);
+
+      const candidates = new Set<string>([
+        subjectSlug,
+        normalizedSlug,
+        subjectSlug.trim(),
+        normalizedSlug.trim(),
+        subjectSlug.trim().toLowerCase(),
+        normalizedSlug.trim().toLowerCase(),
+      ]);
+      try {
+        candidates.add(decodeURIComponent(subjectSlug).trim());
+        candidates.add(decodeURIComponent(subjectSlug).trim().toLowerCase());
+      } catch {}
+      try {
+        candidates.add(encodeURIComponent(subjectSlug).trim());
+        candidates.add(encodeURIComponent(subjectSlug).trim().toLowerCase());
+      } catch {}
+
+      const found = list.find((s) => {
+        const slug = String(s.slug || '').trim();
+        return candidates.has(slug) || candidates.has(slug.toLowerCase());
+      });
       if (!found) {
         toast.error('Дисциплина не найдена');
         router.push('/ct');
