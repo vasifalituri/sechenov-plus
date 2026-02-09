@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 interface Subject {
   id: string;
   name: string;
-  slug: string;
+  slug: string | null;
   description: string | null;
   _count?: {
     quizBlocks: number;
@@ -83,7 +83,10 @@ export default function CTSubjectsClient() {
         <Card
           key={subject.id}
           className="hover:shadow-lg transition-shadow cursor-pointer group"
-          onClick={() => router.push(`/ct/${subject.slug}`)}
+          onClick={() => {
+            const value = (subject.slug && subject.slug.trim()) || subject.id;
+            router.push(`/ct/${encodeURIComponent(value)}`);
+          }}
         >
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
