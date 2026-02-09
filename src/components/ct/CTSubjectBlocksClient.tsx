@@ -24,15 +24,21 @@ interface QuizBlock {
   totalAttempts: number;
 }
 
-export default function CTSubjectBlocksClient({ subjectSlug }: { subjectSlug: string }) {
+export default function CTSubjectBlocksClient({
+  subjectSlug,
+}: {
+  subjectSlug?: string;
+}) {
   const router = useRouter();
+  const rawSlug = typeof subjectSlug === 'string' ? subjectSlug : '';
   const normalizedSlug = useMemo(() => {
+    if (!rawSlug) return '';
     try {
-      return decodeURIComponent(subjectSlug).trim().toLowerCase();
+      return decodeURIComponent(rawSlug).trim().toLowerCase();
     } catch {
-      return subjectSlug.trim().toLowerCase();
+      return rawSlug.trim().toLowerCase();
     }
-  }, [subjectSlug]);
+  }, [rawSlug]);
 
   const [subject, setSubject] = useState<Subject | null>(null);
   const [blocks, setBlocks] = useState<QuizBlock[]>([]);
@@ -52,21 +58,29 @@ export default function CTSubjectBlocksClient({ subjectSlug }: { subjectSlug: st
       const subjectsData = await subjectsRes.json();
       const list: any[] = Array.isArray(subjectsData) ? subjectsData : subjectsData.data;
 
-      const candidates = new Set<string>([
-        subjectSlug,
-        normalizedSlug,
-        subjectSlug.trim(),
-        normalizedSlug.trim(),
-        subjectSlug.trim().toLowerCase(),
-        normalizedSlug.trim().toLowerCase(),
-      ]);
+      const candidates = new Set<string>();
+
+      if (rawSlug) {
+        candidates.add(rawSlug);
+        candidates.add(rawSlug.trim());
+        candidates.add(rawSlug.trim().toLowerCase());
+      }
+      if (normalizedSlug) {
+        candidates.add(normalizedSlug);
+        candidates.add(normalizedSlug.trim());
+        candidates.add(normalizedSlug.trim().toLowerCase());
+      }
       try {
-        candidates.add(decodeURIComponent(subjectSlug).trim());
-        candidates.add(decodeURIComponent(subjectSlug).trim().toLowerCase());
+        if (rawSlug) {
+          candidates.add(decodeURIComponent(rawSlug).trim());
+          candidates.add(decodeURIComponent(rawSlug).trim().toLowerCase());
+        }
       } catch {}
       try {
-        candidates.add(encodeURIComponent(subjectSlug).trim());
-        candidates.add(encodeURIComponent(subjectSlug).trim().toLowerCase());
+        if (rawSlug) {
+          candidates.add(encodeURIComponent(rawSlug).trim());
+          candidates.add(encodeURIComponent(rawSlug).trim().toLowerCase());
+        }
       } catch {}
 
       const found = list.find((s) => {

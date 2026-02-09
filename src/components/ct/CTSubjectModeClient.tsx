@@ -18,20 +18,26 @@ interface Subject {
   };
 }
 
-export default function CTSubjectModeClient({ subjectSlug }: { subjectSlug: string }) {
+export default function CTSubjectModeClient({
+  subjectSlug,
+}: {
+  subjectSlug?: string;
+}) {
   const router = useRouter();
+  const rawSlug = typeof subjectSlug === 'string' ? subjectSlug : '';
   const [subject, setSubject] = useState<Subject | null>(null);
   const [loading, setLoading] = useState(true);
   const [startingQuick, setStartingQuick] = useState(false);
 
   const normalizedSlug = useMemo(() => {
     // Next.js params are usually already decoded, but we guard against double-decoding
+    if (!rawSlug) return '';
     try {
-      return decodeURIComponent(subjectSlug).trim().toLowerCase();
+      return decodeURIComponent(rawSlug).trim().toLowerCase();
     } catch {
-      return subjectSlug.trim().toLowerCase();
+      return rawSlug.trim().toLowerCase();
     }
-  }, [subjectSlug]);
+  }, [rawSlug]);
 
   useEffect(() => {
     void loadSubject();
@@ -46,23 +52,31 @@ export default function CTSubjectModeClient({ subjectSlug }: { subjectSlug: stri
       const data = await res.json();
       const list: Subject[] = Array.isArray(data) ? data : data.data;
 
-      const candidates = new Set<string>([
-        subjectSlug,
-        normalizedSlug,
-        subjectSlug.trim(),
-        normalizedSlug.trim(),
-        subjectSlug.trim().toLowerCase(),
-        normalizedSlug.trim().toLowerCase(),
-      ]);
+      const candidates = new Set<string>();
+
+      if (rawSlug) {
+        candidates.add(rawSlug);
+        candidates.add(rawSlug.trim());
+        candidates.add(rawSlug.trim().toLowerCase());
+      }
+      if (normalizedSlug) {
+        candidates.add(normalizedSlug);
+        candidates.add(normalizedSlug.trim());
+        candidates.add(normalizedSlug.trim().toLowerCase());
+      }
 
       // Try matching raw/decode/encoded variants (handles unicode/cyrillic and edge cases)
       try {
-        candidates.add(decodeURIComponent(subjectSlug).trim());
-        candidates.add(decodeURIComponent(subjectSlug).trim().toLowerCase());
+        if (rawSlug) {
+          candidates.add(decodeURIComponent(rawSlug).trim());
+          candidates.add(decodeURIComponent(rawSlug).trim().toLowerCase());
+        }
       } catch {}
       try {
-        candidates.add(encodeURIComponent(subjectSlug).trim());
-        candidates.add(encodeURIComponent(subjectSlug).trim().toLowerCase());
+        if (rawSlug) {
+          candidates.add(encodeURIComponent(rawSlug).trim());
+          candidates.add(encodeURIComponent(rawSlug).trim().toLowerCase());
+        }
       } catch {}
 
       const found = list.find((s) => {
