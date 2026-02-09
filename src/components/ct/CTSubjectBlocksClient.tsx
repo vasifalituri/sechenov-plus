@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
@@ -30,7 +30,17 @@ export default function CTSubjectBlocksClient({
   subjectSlug?: string;
 }) {
   const router = useRouter();
-  const rawSlug = typeof subjectSlug === 'string' ? subjectSlug : '';
+  const pathname = usePathname();
+
+  const rawSlug = useMemo(() => {
+    if (typeof subjectSlug === 'string' && subjectSlug.trim()) return subjectSlug;
+
+    // Fallback: derive from URL (/ct/[subject]/blocks)
+    const match = pathname.match(/\/ct\/([^/]+)/);
+    if (match?.[1]) return decodeURIComponent(match[1]);
+
+    return '';
+  }, [subjectSlug, pathname]);
   const normalizedSlug = useMemo(() => {
     if (!rawSlug) return '';
     try {
