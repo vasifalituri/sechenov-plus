@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import MockExamModeSelector from '@/components/mock-exam/MockExamModeSelector';
+import CTSubjectModeClient from '@/components/ct/CTSubjectModeClient';
 
 export default function CTSubjectPage({ params }: { params: { subject: string } }) {
   return (
     <Suspense fallback={<div>Загрузка...</div>}>
-      <MockExamModeSelector subjectSlug={params.subject} />
+      <CTSubjectModeClient subjectSlug={params.subject} />
     </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import CTMainClient from '@/components/ct/CTMainClient';
+import CTSubjectsClient from '@/components/ct/CTSubjectsClient';
 
 export const metadata = {
   title: 'ЦТ - Sechenov+',
@@ -12,12 +12,12 @@ export default function CTPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Централизованное тестирование</h1>
         <p className="text-gray-600 mt-2">
-          Выберите режим подготовки к ЦТ
+          Выберите дисциплину
         </p>
       </div>
       
       <Suspense fallback={<div>Загрузка...</div>}>
-        <CTMainClient />
+        <CTSubjectsClient />
       </Suspense>
     </div>
   );
