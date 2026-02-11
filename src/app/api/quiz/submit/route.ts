@@ -89,9 +89,11 @@ export async function POST(req: NextRequest) {
     // Сохраняем все ответы и обновляем попытку в транзакции
     const score = (correctCount / attempt.totalQuestions) * 100;
 
-    await prisma.$transaction([
-      // Обновляем записи ответов (они уже созданы при старте теста)
-      ...answerRecords.map(answer =>
+    // Разделим операции на части для лучшей обработки ошибок
+    
+    // 1. Обновляем ответы
+    await Promise.all(
+      answerRecords.map(answer =>
         prisma.quizAnswer.updateMany({
           where: {
             attemptId,
@@ -103,31 +105,37 @@ export async function POST(req: NextRequest) {
             timeSpent: answer.timeSpent
           }
         })
-      ),
-      // Обновляем попытку
-      prisma.quizAttempt.update({
-        where: { id: attemptId },
-        data: {
-          correctAnswers: correctCount,
-          wrongAnswers: wrongCount,
-          skippedAnswers: skippedCount,
-          score,
-          timeSpent,
-          completedAt: new Date(),
-          isCompleted: true,
-        }
-      }),
-      // Обновляем статистику вопросов
-      ...answerRecords.map(answer =>
-        prisma.quizQuestion.update({
-          where: { id: answer.questionId },
-          data: {
-            timesCorrect: answer.isCorrect ? { increment: 1 } : undefined,
-            timesWrong: !answer.isCorrect && answer.userAnswer ? { increment: 1 } : undefined,
-          }
-        })
-      ),
-    ]);
+      )
+    );
+
+    // 2. Обновляем попытку
+    await prisma.quizAttempt.update({
+      where: { id: attemptId },
+      data: {
+        correctAnswers: correctCount,
+        wrongAnswers: wrongCount,
+        skippedAnswers: skippedCount,
+        score,
+        timeSpent,
+        completedAt: new Date(),
+        isCompleted: true,
+      }
+    });
+
+    // 3. Обновляем статистику вопросов (только если нужно)
+    await Promise.all(
+      answerRecords
+        .filter(answer => answer.isCorrect || answer.userAnswer) // Обновляем только отвеченные
+        .map(answer =>
+          prisma.quizQuestion.update({
+            where: { id: answer.questionId },
+            data: {
+              ...(answer.isCorrect ? { timesCorrect: { increment: 1 } } : {}),
+              ...(!answer.isCorrect && answer.userAnswer ? { timesWrong: { increment: 1 } } : {}),
+            }
+          })
+        )
+    );
 
     // Обновляем статистику блока (если это блок)
     if (attempt.blockId) {
@@ -178,8 +186,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(results);
   } catch (error) {
     console.error('Error submitting quiz:', error);
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Stack trace:', error instanceof Error ? error.stack : '');
     return NextResponse.json(
-      { error: 'Failed to submit quiz' },
+      { 
+        error: 'Failed to submit quiz',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

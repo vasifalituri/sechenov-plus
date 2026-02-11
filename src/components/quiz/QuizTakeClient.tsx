@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, CheckCircle, Flag, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +18,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [timeSpent, setTimeSpent] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startTime] = useState(Date.now());
@@ -72,6 +73,18 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       if (cachedQuiz) {
         console.log('✅ [QuizTakeClient] Loading from localStorage');
         setQuiz(JSON.parse(cachedQuiz));
+        
+        // Загружаем отметки из localStorage
+        const savedFlags = localStorage.getItem(`quiz_flags_${attemptId}`);
+        if (savedFlags) {
+          try {
+            const flagsArray = JSON.parse(savedFlags);
+            setFlaggedQuestions(new Set(flagsArray));
+          } catch (e) {
+            console.error('Error loading flags:', e);
+          }
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -95,6 +108,18 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
           const data = await res.json();
           localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
           setQuiz(data);
+          
+          // Загружаем отметки из localStorage
+          const savedFlags = localStorage.getItem(`quiz_flags_${attemptId}`);
+          if (savedFlags) {
+            try {
+              const flagsArray = JSON.parse(savedFlags);
+              setFlaggedQuestions(new Set(flagsArray));
+            } catch (e) {
+              console.error('Error loading flags:', e);
+            }
+          }
+          
           return;
         }
 
@@ -141,6 +166,47 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
     }));
   };
 
+  const toggleFlag = (questionId: string) => {
+    setFlaggedQuestions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+        toast.success('Отметка снята');
+      } else {
+        newSet.add(questionId);
+        toast.success('Вопрос отмечен для проверки');
+      }
+      // Сохраняем в localStorage
+      localStorage.setItem(`quiz_flags_${attemptId}`, JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
+  };
+
+  const goToNextFlagged = () => {
+    const flaggedArray = Array.from(flaggedQuestions);
+    if (flaggedArray.length === 0) {
+      toast.error('Нет отмеченных вопросов');
+      return;
+    }
+    
+    // Найти следующий отмеченный вопрос после текущего
+    const currentQuestionId = quiz.questions[currentIndex].id;
+    const currentFlaggedIndex = flaggedArray.indexOf(currentQuestionId);
+    
+    let nextFlaggedId;
+    if (currentFlaggedIndex === -1 || currentFlaggedIndex === flaggedArray.length - 1) {
+      // Если текущий не отмечен или это последний отмеченный - берем первый
+      nextFlaggedId = flaggedArray[0];
+    } else {
+      nextFlaggedId = flaggedArray[currentFlaggedIndex + 1];
+    }
+    
+    const nextIndex = quiz.questions.findIndex((q: any) => q.id === nextFlaggedId);
+    if (nextIndex !== -1) {
+      setCurrentIndex(nextIndex);
+    }
+  };
+
   const handleSubmit = async () => {
     if (Object.keys(answers).length < quiz.questions.length) {
       if (!confirm(`Вы ответили на ${Object.keys(answers).length} из ${quiz.questions.length} вопросов. Отправить тест?`)) {
@@ -169,6 +235,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
 
       if (res.ok) {
         localStorage.removeItem(`quiz_${attemptId}`);
+        localStorage.removeItem(`quiz_flags_${attemptId}`); // Удаляем отметки после завершения
         toast.success('Тест завершен!');
         router.push(`/ct/result/${attemptId}`);
       } else {
@@ -228,11 +295,22 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
               Отвечено: {answeredCount} / {quiz.totalQuestions}
             </p>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="w-4 h-4" />
-            <span className="font-mono">
-              {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
-            </span>
+          <div className="flex items-center gap-4">
+            {flaggedQuestions.size > 0 && (
+              <button
+                onClick={goToNextFlagged}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-50 border border-yellow-300 text-yellow-700 hover:bg-yellow-100 transition-colors text-sm"
+              >
+                <Flag className="w-4 h-4 fill-yellow-500" />
+                <span>Отмечено: {flaggedQuestions.size}</span>
+              </button>
+            )}
+            <div className="flex items-center gap-2 text-gray-600">
+              <Clock className="w-4 h-4" />
+              <span className="font-mono">
+                {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -246,9 +324,28 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       {/* Вопрос */}
       <Card className="p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {currentQuestion.questionText}
-          </h2>
+          <div className="flex items-start justify-between mb-4">
+            <h2 className="text-xl font-semibold flex-1">
+              {currentQuestion.questionText}
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleFlag(currentQuestion.id)}
+              className={`ml-4 ${
+                flaggedQuestions.has(currentQuestion.id)
+                  ? 'bg-yellow-50 border-yellow-500 text-yellow-700 hover:bg-yellow-100'
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <Flag
+                className={`w-4 h-4 mr-2 ${
+                  flaggedQuestions.has(currentQuestion.id) ? 'fill-yellow-500' : ''
+                }`}
+              />
+              {flaggedQuestions.has(currentQuestion.id) ? 'Отмечен' : 'Отметить'}
+            </Button>
+          </div>
           
           {currentQuestion.questionImage && (
             <img
@@ -330,21 +427,50 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       <Card className="p-4">
         <p className="text-sm font-medium mb-3">Навигация по вопросам:</p>
         <div className="grid grid-cols-10 gap-2">
-          {quiz.questions.map((_: any, idx: number) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all ${
-                idx === currentIndex
-                  ? 'bg-blue-600 text-white'
-                  : answers[quiz.questions[idx].id]
-                  ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
+          {quiz.questions.map((q: any, idx: number) => {
+            const isFlagged = flaggedQuestions.has(q.id);
+            const isAnswered = answers[q.id];
+            const isCurrent = idx === currentIndex;
+            
+            return (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all relative ${
+                  isCurrent
+                    ? 'bg-blue-600 text-white'
+                    : isAnswered
+                    ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {idx + 1}
+                {isFlagged && (
+                  <Flag className="w-3 h-3 fill-yellow-500 text-yellow-500 absolute -top-1 -right-1" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        
+        {/* Легенда */}
+        <div className="flex gap-4 mt-4 text-xs text-gray-600">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-blue-600 rounded"></div>
+            <span>Текущий</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
+            <span>Отвечен</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-gray-100 rounded"></div>
+            <span>Не отвечен</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Flag className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+            <span>Отмечен</span>
+          </div>
         </div>
       </Card>
     </div>
