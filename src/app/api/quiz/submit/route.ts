@@ -90,10 +90,20 @@ export async function POST(req: NextRequest) {
     const score = (correctCount / attempt.totalQuestions) * 100;
 
     await prisma.$transaction([
-      // Создаем записи ответов
-      prisma.quizAnswer.createMany({
-        data: answerRecords
-      }),
+      // Обновляем записи ответов (они уже созданы при старте теста)
+      ...answerRecords.map(answer =>
+        prisma.quizAnswer.updateMany({
+          where: {
+            attemptId,
+            questionId: answer.questionId
+          },
+          data: {
+            userAnswer: answer.userAnswer,
+            isCorrect: answer.isCorrect,
+            timeSpent: answer.timeSpent
+          }
+        })
+      ),
       // Обновляем попытку
       prisma.quizAttempt.update({
         where: { id: attemptId },
