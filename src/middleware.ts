@@ -51,6 +51,6 @@ export const config = {
      * - public (public files)
      * - uploads (uploaded files)
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|public|uploads).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|site.webmanifest|public|uploads).*)',
   ],
 };

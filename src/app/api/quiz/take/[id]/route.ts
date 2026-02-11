@@ -16,7 +16,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const attempt = await prisma.quizAttempt.findUnique({
+    let attempt = await prisma.quizAttempt.findUnique({
       where: { id },
       include: {
         subject: { select: { id: true, name: true, slug: true } },
@@ -42,8 +42,46 @@ export async function GET(
       },
     });
 
+    // Neon (and pooled connections) can exhibit short read-after-write delay.
+    // Retry a few times before returning 404.
     if (!attempt) {
-      return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
+      for (let i = 0; i < 6; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        const retryAttempt = await prisma.quizAttempt.findUnique({
+          where: { id },
+          include: {
+            subject: { select: { id: true, name: true, slug: true } },
+            block: { select: { id: true, title: true } },
+            answers: {
+              include: {
+                question: {
+                  select: {
+                    id: true,
+                    questionText: true,
+                    questionImage: true,
+                    questionType: true,
+                    optionA: true,
+                    optionB: true,
+                    optionC: true,
+                    optionD: true,
+                    optionE: true,
+                  },
+                },
+              },
+              orderBy: { createdAt: 'asc' },
+            },
+          },
+        });
+
+        if (retryAttempt) {
+          attempt = retryAttempt;
+          break;
+        }
+      }
+
+      if (!attempt) {
+        return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
+      }
     }
 
     if (attempt.userId !== session.user.id && session.user.role !== 'ADMIN') {
