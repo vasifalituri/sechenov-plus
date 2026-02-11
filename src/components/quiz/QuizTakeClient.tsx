@@ -14,6 +14,8 @@ interface QuizTakeClientProps {
 export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const router = useRouter();
   const [quiz, setQuiz] = useState<any>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeSpent, setTimeSpent] = useState(0);
@@ -50,7 +52,12 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
     fetchQuiz();
   }, [attemptId]);
 
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
   const fetchQuiz = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+
     try {
       // Здесь нужно получить вопросы из состояния или localStorage
       // так как API /api/quiz/start уже вызван на предыдущей странице
@@ -61,18 +68,32 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       }
 
       // Fallback: load from server (works after refresh / opening link on another device)
-      const res = await fetch(`/api/quiz/take/${attemptId}`);
-      if (!res.ok) {
-        let details = '';
+      // Retry a few times if the attempt was just created and DB hasn't reflected it yet.
+      let lastStatus: number | null = null;
+      let lastDetails = '';
+
+      for (let i = 0; i < 5; i++) {
+        const res = await fetch(`/api/quiz/take/${attemptId}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
+          setQuiz(data);
+          return;
+        }
+
+        lastStatus = res.status;
         try {
-          details = await res.text();
-        } catch {}
+          lastDetails = await res.text();
+        } catch {
+          lastDetails = '';
+        }
 
         console.error('Failed to load quiz take data', {
           attemptId,
           status: res.status,
           statusText: res.statusText,
-          details,
+          details: lastDetails,
+          retry: i,
         });
 
         if (res.status === 401) {
@@ -81,17 +102,23 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
           return;
         }
 
-        toast.error(`Тест не найден (HTTP ${res.status})`);
-        router.push('/ct');
-        return;
+        // Only retry on "Attempt not found" / 404
+        if (res.status !== 404) break;
+
+        // Small backoff: 200ms, 400ms, 800ms...
+        await sleep(200 * Math.pow(2, i));
       }
 
-      const data = await res.json();
-      localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
-      setQuiz(data);
+      const msg = `Тест не найден (HTTP ${lastStatus ?? '???'})`;
+      setLoadError(lastDetails ? `${msg}: ${lastDetails}` : msg);
+      toast.error(msg);
+      return;
     } catch (error) {
       console.error('Error loading quiz:', error);
+      setLoadError('Ошибка загрузки теста');
       toast.error('Ошибка загрузки теста');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -146,8 +173,28 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
 
   if (!quiz) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Загрузка теста...</div>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center max-w-xl">
+          {isLoading && (
+            <>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+              <p className="text-gray-600">Подготавливаем тест...</p>
+            </>
+          )}
+
+          {!isLoading && loadError && (
+            <>
+              <p className="text-red-600 font-medium mb-2">Не удалось открыть тест</p>
+              <p className="text-sm text-gray-600 mb-4 break-words">{loadError}</p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={fetchQuiz}>Повторить</Button>
+                <Button variant="outline" onClick={() => router.push('/ct')}>
+                  Назад
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
