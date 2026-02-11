@@ -129,12 +129,13 @@ export async function POST(req: NextRequest) {
 
     // Persist the question set for this attempt so /ct/take works even after refresh
     await prisma.quizAnswer.createMany({
-      data: questionIds.map((questionId: string) => ({
+      data: questionIds.map((questionId: string, index: number) => ({
         attemptId: attempt.id,
         questionId,
         userAnswer: null,
         isCorrect: false,
         timeSpent: null,
+        questionOrder: index, // Сохраняем порядок вопросов
       })),
       skipDuplicates: true,
     });

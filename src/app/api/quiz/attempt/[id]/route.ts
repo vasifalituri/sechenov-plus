@@ -38,7 +38,7 @@ export async function GET(
               }
             }
           },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { questionOrder: 'asc' } // Сортируем по порядку вопросов в тесте
         }
       }
     });

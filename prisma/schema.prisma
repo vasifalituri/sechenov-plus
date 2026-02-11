@@ -558,20 +558,22 @@ model QuizAttempt {
 }
 
 model QuizAnswer {
-  id         String       @id @default(cuid())
-  attemptId  String
-  questionId String
-  userAnswer String?
-  isCorrect  Boolean
-  timeSpent  Int?
-  createdAt  DateTime     @default(now())
-  attempt    QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id            String       @id @default(cuid())
+  attemptId     String
+  questionId    String
+  userAnswer    String?
+  isCorrect     Boolean
+  timeSpent     Int?
+  questionOrder Int          @default(0)
+  createdAt     DateTime     @default(now())
+  attempt       QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question      QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
   @@index([questionId])
   @@index([isCorrect])
+  @@index([attemptId, questionOrder])
   @@map("quiz_answers")
 }
 
