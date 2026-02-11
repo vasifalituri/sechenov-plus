@@ -73,12 +73,18 @@ export default function QuickTestClient() {
       }
       
       const data = await response.json();
-      
+
+      const attemptId = data?.attemptId ?? data?.attemptID ?? data?.id ?? data?.attempt?.id;
+      if (!attemptId) {
+        console.error('Unexpected /api/quiz/start response (no attemptId):', data);
+        throw new Error('Не удалось начать тест: не получен идентификатор попытки');
+      }
+
       // Сохраняем данные теста в localStorage для QuizTakeClient
-      localStorage.setItem(`quiz_${data.attemptId}`, JSON.stringify(data));
-      
+      localStorage.setItem(`quiz_${attemptId}`, JSON.stringify({ ...data, attemptId }));
+
       toast.success('Тест начат!');
-      router.push(`/ct/take/${data.attemptId}`);
+      router.push(`/ct/take/${attemptId}`);
     } catch (error: any) {
       console.error('Error starting test:', error);
       toast.error(error.message || 'Не удалось начать тест');

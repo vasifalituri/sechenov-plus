@@ -102,8 +102,15 @@ export default function CTSubjectModeClient({
       }
 
       const data = await response.json();
-      localStorage.setItem(`quiz_${data.attemptId}`, JSON.stringify(data));
-      router.push(`/ct/take/${data.attemptId}`);
+
+      const attemptId = data?.attemptId ?? data?.attemptID ?? data?.id ?? data?.attempt?.id;
+      if (!attemptId) {
+        console.error('Unexpected /api/quiz/start response (no attemptId):', data);
+        throw new Error('Не удалось начать тест: не получен идентификатор попытки');
+      }
+
+      localStorage.setItem(`quiz_${attemptId}`, JSON.stringify({ ...data, attemptId }));
+      router.push(`/ct/take/${attemptId}`);
     } catch (error: any) {
       console.error('Error starting quick test:', error);
       toast.error(error.message || 'Не удалось начать быстрый тест');

@@ -41,6 +41,12 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   }, []);
 
   useEffect(() => {
+    if (!attemptId || attemptId === 'undefined' || attemptId === 'null') {
+      toast.error('Тест не найден');
+      router.push('/ct');
+      return;
+    }
+
     fetchQuiz();
   }, [attemptId]);
 
