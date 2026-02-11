@@ -51,10 +51,20 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       const cachedQuiz = localStorage.getItem(`quiz_${attemptId}`);
       if (cachedQuiz) {
         setQuiz(JSON.parse(cachedQuiz));
-      } else {
+        return;
+      }
+
+      // Fallback: load from server (works after refresh / opening link on another device)
+      const res = await fetch(`/api/quiz/take/${attemptId}`);
+      if (!res.ok) {
         toast.error('Тест не найден');
         router.push('/ct');
+        return;
       }
+
+      const data = await res.json();
+      localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
+      setQuiz(data);
     } catch (error) {
       console.error('Error loading quiz:', error);
       toast.error('Ошибка загрузки теста');

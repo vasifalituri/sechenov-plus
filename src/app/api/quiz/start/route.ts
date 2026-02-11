@@ -68,9 +68,9 @@ export async function POST(req: NextRequest) {
         include: {
           questions: {
             where: { isActive: true },
-            orderBy: { createdAt: 'asc' }
-          }
-        }
+            orderBy: { createdAt: 'asc' },
+          },
+        },
       });
 
       if (!block) {
@@ -82,6 +82,18 @@ export async function POST(req: NextRequest) {
       }
 
       questions = block.questions;
+
+      // If the block has no questions linked (common after bulk import), fallback to subject questions
+      if (questions.length === 0) {
+        questions = await prisma.quizQuestion.findMany({
+          where: {
+            subjectId: block.subjectId,
+            isActive: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        });
+      }
+
       totalQuestions = questions.length;
     }
 
@@ -105,14 +117,26 @@ export async function POST(req: NextRequest) {
         skippedAnswers: 0,
         score: 0,
         isCompleted: false,
-      }
+      },
     });
 
     // Обновляем статистику показов вопросов
     const questionIds = questions.map((q: any) => q.id);
     await prisma.quizQuestion.updateMany({
       where: { id: { in: questionIds } },
-      data: { timesShown: { increment: 1 } }
+      data: { timesShown: { increment: 1 } },
+    });
+
+    // Persist the question set for this attempt so /ct/take works even after refresh
+    await prisma.quizAnswer.createMany({
+      data: questionIds.map((questionId: string) => ({
+        attemptId: attempt.id,
+        questionId,
+        userAnswer: null,
+        isCorrect: false,
+        timeSpent: null,
+      })),
+      skipDuplicates: true,
     });
 
     // Возвращаем попытку и вопросы (без правильных ответов!)
