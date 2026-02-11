@@ -69,12 +69,18 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       }
 
       // Fallback: load from server (works after refresh / opening link on another device)
-      // Retry a few times if the attempt was just created and DB hasn't reflected it yet.
+      // Neon can have a short read-after-write delay (especially with pooling/replicas),
+      // so we retry for a bit longer before declaring the attempt missing.
       let lastStatus: number | null = null;
       let lastDetails = '';
 
-      for (let i = 0; i < 5; i++) {
-        const res = await fetch(`/api/quiz/take/${attemptId}`, { cache: 'no-store' });
+      const maxAttempts = 8; // ~0.3 + 0.6 + 1.2 + 2 + 2 + 2 + 2 + 2 = ~14s
+      for (let i = 0; i < maxAttempts; i++) {
+        const res = await fetch(`/api/quiz/take/${attemptId}`, {
+          cache: 'no-store',
+          headers: { 'cache-control': 'no-store' },
+        });
+
         if (res.ok) {
           const data = await res.json();
           localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
@@ -89,29 +95,24 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
           lastDetails = '';
         }
 
-        console.error('Failed to load quiz take data', {
-          attemptId,
-          status: res.status,
-          statusText: res.statusText,
-          details: lastDetails,
-          retry: i,
-        });
-
+        // Unauthorized: stop retrying
         if (res.status === 401) {
-          // Don't auto-redirect; show a clear message and let user decide.
-          lastDetails = lastDetails || '{"error":"Unauthorized"}';
           break;
         }
 
-        // Only retry on "Attempt not found" / 404
-        if (res.status !== 404) break;
+        // Retry only on 404 (attempt not visible yet)
+        if (res.status !== 404) {
+          break;
+        }
 
-        // Small backoff: 200ms, 400ms, 800ms...
-        await sleep(200 * Math.pow(2, i));
+        // backoff (cap at 2000ms)
+        const delay = Math.min(300 * Math.pow(2, i), 2000);
+        await sleep(delay);
       }
 
       const msg = `Тест не найден (HTTP ${lastStatus ?? '???'})`;
       setLoadError(lastDetails ? `${msg}: ${lastDetails}` : msg);
+      // Do not auto-redirect; user can retry.
       toast.error(msg);
       return;
     } catch (error) {
