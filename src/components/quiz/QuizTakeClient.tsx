@@ -57,7 +57,25 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       // Fallback: load from server (works after refresh / opening link on another device)
       const res = await fetch(`/api/quiz/take/${attemptId}`);
       if (!res.ok) {
-        toast.error('Тест не найден');
+        let details = '';
+        try {
+          details = await res.text();
+        } catch {}
+
+        console.error('Failed to load quiz take data', {
+          attemptId,
+          status: res.status,
+          statusText: res.statusText,
+          details,
+        });
+
+        if (res.status === 401) {
+          toast.error('Сессия истекла. Войдите снова.');
+          router.push('/login');
+          return;
+        }
+
+        toast.error(`Тест не найден (HTTP ${res.status})`);
         router.push('/ct');
         return;
       }
