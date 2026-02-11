@@ -44,12 +44,13 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
 
   useEffect(() => {
     if (!attemptId || attemptId === 'undefined' || attemptId === 'null') {
-      toast.error('Тест не найден');
-      router.push('/ct');
+      setIsLoading(false);
+      setLoadError('Тест не найден: отсутствует идентификатор попытки');
       return;
     }
 
     fetchQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptId]);
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -97,9 +98,9 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
         });
 
         if (res.status === 401) {
-          toast.error('Сессия истекла. Войдите снова.');
-          router.push('/login');
-          return;
+          // Don't auto-redirect; show a clear message and let user decide.
+          lastDetails = lastDetails || '{"error":"Unauthorized"}';
+          break;
         }
 
         // Only retry on "Attempt not found" / 404
