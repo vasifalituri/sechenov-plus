@@ -5,11 +5,13 @@ export const metadata = {
   title: 'Прохождение теста - Sechenov+',
 };
 
-export default function QuizTakePage({ params }: { params: { attemptId: string } }) {
+export default async function QuizTakePage({ params }: { params: Promise<{ attemptId: string }> }) {
+  const { attemptId } = await params;
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <Suspense fallback={<div>Загрузка теста...</div>}>
-        <QuizTakeClient attemptId={params.attemptId} />
+        <QuizTakeClient attemptId={attemptId} />
       </Suspense>
     </div>
   );

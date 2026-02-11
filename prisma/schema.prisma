@@ -1,5 +1,3 @@
-// Prisma Schema for Medical Exam Platform
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,7 +7,574 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+model User {
+  id                   String                 @id @default(uuid())
+  email                String                 @unique
+  username             String?                @unique
+  password             String
+  fullName             String
+  academicYear         Int
+  profileImage         String?
+  status               UserStatus             @default(PENDING)
+  role                 UserRole               @default(USER)
+  emailVerified        Boolean                @default(false)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  announcements        Announcement[]         @relation("AnnouncementAuthor")
+  bookmarks            Bookmark[]
+  approvedComments     Comment[]              @relation("CommentApprover")
+  comments             Comment[]              @relation("CommentAuthor")
+  approvedThreads      DiscussionThread[]     @relation("ThreadApprover")
+  discussionThreads    DiscussionThread[]     @relation("ThreadAuthor")
+  externalResources    ExternalResource[]     @relation("ResourceCreator")
+  downloads            MaterialDownload[]
+  approvedMaterials    Material[]             @relation("MaterialApprover")
+  uploadedMaterials    Material[]             @relation("MaterialUploader")
+  receivedMessages     Message[]              @relation("MessageReceiver")
+  sentMessages         Message[]              @relation("MessageSender")
+  createdNotifications Notification[]         @relation("NotificationCreator")
+  notifications        Notification[]         @relation("NotificationReceiver")
+  pollVotes            PollVote[]             @relation("PollVoter")
+  createdPolls         Poll[]                 @relation("PollCreator")
+  quizAttempts         QuizAttempt[]
+  ratings              Rating[]
+  teacherRatings       TeacherRating[]        @relation("UserTeacherRatings")
+  reviewHelpful        TeacherReviewHelpful[] @relation("UserReviewHelpful")
+  teacherReviews       TeacherReview[]        @relation("UserTeacherReviews")
+  verificationCodes    VerificationCode[]
+  votes                Vote[]
+
+  @@index([email])
+  @@index([username])
+  @@index([status])
+  @@map("users")
+}
+
+model Subject {
+  id                String             @id @default(uuid())
+  name              String
+  slug              String             @unique
+  description       String?
+  order             Int                @default(0)
+  createdAt         DateTime           @default(now())
+  discussionThreads DiscussionThread[]
+  materials         Material[]
+  quizAttempts      QuizAttempt[]
+  quizBlocks        QuizBlock[]
+  quizQuestions     QuizQuestion[]
+  teachers          TeacherSubject[]
+
+  @@index([slug])
+  @@map("subjects")
+}
+
+model Material {
+  id            String             @id @default(uuid())
+  title         String
+  description   String?
+  subjectId     String
+  academicYear  Int
+  filePath      String
+  fileName      String
+  fileType      FileType
+  fileSize      Int
+  storageType   StorageType        @default(SUPABASE)
+  storageBucket String?
+  externalUrl   String?
+  megaAccountId Int?
+  tags          String[]
+  status        ContentStatus      @default(PENDING)
+  uploadedById  String
+  approvedById  String?
+  downloadCount Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  bookmarks     Bookmark[]
+  downloads     MaterialDownload[]
+  approvedBy    User?              @relation("MaterialApprover", fields: [approvedById], references: [id])
+  subject       Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedBy    User               @relation("MaterialUploader", fields: [uploadedById], references: [id])
+  ratings       Rating[]
+
+  @@index([subjectId])
+  @@index([academicYear])
+  @@index([status])
+  @@index([createdAt])
+  @@map("materials")
+}
+
+model MaterialDownload {
+  id           String   @id @default(uuid())
+  materialId   String
+  userId       String
+  downloadedAt DateTime @default(now())
+  material     Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, userId])
+  @@index([materialId])
+  @@index([userId])
+  @@map("material_downloads")
+}
+
+model DiscussionThread {
+  id            String        @id @default(uuid())
+  title         String
+  content       String
+  subjectId     String
+  academicYear  Int
+  authorId      String
+  status        ContentStatus @default(PENDING)
+  approvedById  String?
+  upvotes       Int           @default(0)
+  downvotes     Int           @default(0)
+  commentsCount Int           @default(0)
+  isPinned      Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  approvedBy    User?         @relation("ThreadApprover", fields: [approvedById], references: [id])
+  author        User          @relation("ThreadAuthor", fields: [authorId], references: [id])
+  subject       Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  votes         Vote[]
+
+  @@index([subjectId])
+  @@index([academicYear])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+  @@map("discussion_threads")
+}
+
+model Comment {
+  id           String           @id @default(uuid())
+  content      String
+  threadId     String
+  parentId     String?
+  authorId     String
+  status       ContentStatus    @default(PENDING)
+  approvedById String?
+  upvotes      Int              @default(0)
+  downvotes    Int              @default(0)
+  depth        Int              @default(0)
+  isPinned     Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  approvedBy   User?            @relation("CommentApprover", fields: [approvedById], references: [id])
+  author       User             @relation("CommentAuthor", fields: [authorId], references: [id])
+  parent       Comment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[]        @relation("CommentReplies")
+  thread       DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  votes        Vote[]
+
+  @@index([threadId])
+  @@index([parentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+  @@map("comments")
+}
+
+model Vote {
+  id        String            @id @default(uuid())
+  userId    String
+  threadId  String?
+  commentId String?
+  type      VoteType
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  comment   Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  thread    DiscussionThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([threadId])
+  @@index([commentId])
+  @@map("votes")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  receiverId String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Bookmark {
+  id           String            @id @default(uuid())
+  userId       String
+  type         BookmarkType
+  materialId   String?
+  discussionId String?
+  note         String?
+  createdAt    DateTime          @default(now())
+  discussion   DiscussionThread? @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  material     Material?         @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+  @@unique([userId, discussionId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("bookmarks")
+}
+
+model Rating {
+  id         String   @id @default(uuid())
+  userId     String
+  materialId String
+  rating     Int
+  review     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+  @@index([materialId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("ratings")
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  link        String?
+  isRead      Boolean          @default(false)
+  createdById String?
+  createdAt   DateTime         @default(now())
+  createdBy   User?            @relation("NotificationCreator", fields: [createdById], references: [id])
+  user        User             @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  userId    String
+  email     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("verification_codes")
+}
+
+model Announcement {
+  id        String           @id @default(cuid())
+  title     String
+  content   String
+  type      AnnouncementType @default(INFO)
+  priority  Int              @default(0)
+  isActive  Boolean          @default(true)
+  authorId  String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  expiresAt DateTime?
+  author    User             @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([authorId])
+  @@map("announcements")
+}
+
+model ExternalResource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  icon        String   @default("🔗")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation("ResourceCreator", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([order])
+  @@index([authorId])
+  @@map("external_resources")
+}
+
+model Poll {
+  id          String       @id @default(cuid())
+  question    String
+  description String?
+  isActive    Boolean      @default(true)
+  isMultiple  Boolean      @default(false)
+  createdById String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  expiresAt   DateTime?
+  options     PollOption[]
+  votes       PollVote[]
+  createdBy   User         @relation("PollCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([createdById])
+  @@map("polls")
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  pollId String
+  text   String
+  order  Int        @default(0)
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes  PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime   @default(now())
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user      User       @relation("PollVoter", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId, optionId])
+  @@index([pollId])
+  @@index([optionId])
+  @@index([userId])
+  @@map("poll_votes")
+}
+
+model Teacher {
+  id             String           @id @default(cuid())
+  fullName       String
+  department     String
+  position       String?
+  photoUrl       String?
+  bio            String?
+  academicDegree String?
+  isActive       Boolean          @default(true)
+  averageRating  Float            @default(0)
+  totalRatings   Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  ratings        TeacherRating[]
+  reviews        TeacherReview[]
+  subjects       TeacherSubject[]
+
+  @@index([department])
+  @@index([averageRating])
+  @@index([isActive])
+  @@map("teachers")
+}
+
+model TeacherSubject {
+  id        String   @id @default(cuid())
+  teacherId String
+  subjectId String
+  createdAt DateTime @default(now())
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@map("teacher_subjects")
+}
+
+model TeacherRating {
+  id                  String   @id @default(cuid())
+  teacherId           String
+  userId              String
+  knowledgeRating     Int
+  teachingRating      Int
+  communicationRating Int
+  fairnessRating      Int
+  overallRating       Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  teacher             Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  user                User     @relation("UserTeacherRatings", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, userId])
+  @@index([teacherId])
+  @@index([userId])
+  @@index([overallRating])
+  @@map("teacher_ratings")
+}
+
+model TeacherReview {
+  id             String                 @id @default(cuid())
+  teacherId      String
+  userId         String
+  content        String
+  isAnonymous    Boolean                @default(false)
+  status         ContentStatus          @default(PENDING)
+  helpfulCount   Int                    @default(0)
+  unhelpfulCount Int                    @default(0)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  helpfulness    TeacherReviewHelpful[]
+  teacher        Teacher                @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  user           User                   @relation("UserTeacherReviews", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("teacher_reviews")
+}
+
+model TeacherReviewHelpful {
+  id        String        @id @default(cuid())
+  reviewId  String
+  userId    String
+  isHelpful Boolean
+  createdAt DateTime      @default(now())
+  review    TeacherReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User          @relation("UserReviewHelpful", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
+  @@map("teacher_review_helpful")
+}
+
+model QuizBlock {
+  id            String             @id @default(cuid())
+  title         String
+  description   String?
+  subjectId     String
+  questionCount Int                @default(0)
+  difficulty    QuestionDifficulty @default(MEDIUM)
+  isActive      Boolean            @default(true)
+  orderIndex    Int                @default(0)
+  totalAttempts Int                @default(0)
+  averageScore  Float              @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  attempts      QuizAttempt[]
+  subject       Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions     QuizQuestion[]
+
+  @@index([subjectId])
+  @@index([isActive])
+  @@index([difficulty])
+  @@index([orderIndex])
+  @@map("quiz_blocks")
+}
+
+model QuizQuestion {
+  id            String             @id @default(cuid())
+  blockId       String?
+  subjectId     String
+  questionText  String
+  questionImage String?
+  explanation   String?
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  optionE       String?
+  correctAnswer String
+  questionType  QuestionType       @default(SINGLE)
+  difficulty    QuestionDifficulty @default(MEDIUM)
+  isActive      Boolean            @default(true)
+  tags          String[]
+  timesShown    Int                @default(0)
+  timesCorrect  Int                @default(0)
+  timesWrong    Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  answers       QuizAnswer[]
+  block         QuizBlock?         @relation(fields: [blockId], references: [id])
+  subject       Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([blockId])
+  @@index([subjectId])
+  @@index([isActive])
+  @@index([difficulty])
+  @@index([correctAnswer])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id             String       @id @default(cuid())
+  userId         String
+  mode           QuizMode
+  blockId        String?
+  subjectId      String?
+  totalQuestions Int
+  correctAnswers Int
+  wrongAnswers   Int
+  skippedAnswers Int          @default(0)
+  score          Float
+  startedAt      DateTime     @default(now())
+  completedAt    DateTime?
+  timeSpent      Int?
+  isCompleted    Boolean      @default(false)
+  answers        QuizAnswer[]
+  block          QuizBlock?   @relation(fields: [blockId], references: [id])
+  subject        Subject?     @relation(fields: [subjectId], references: [id])
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([mode])
+  @@index([blockId])
+  @@index([subjectId])
+  @@index([isCompleted])
+  @@index([startedAt])
+  @@index([score])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id         String       @id @default(cuid())
+  attemptId  String
+  questionId String
+  userAnswer String?
+  isCorrect  Boolean
+  timeSpent  Int?
+  createdAt  DateTime     @default(now())
+  attempt    QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
+  @@index([isCorrect])
+  @@map("quiz_answers")
+}
+
 enum UserStatus {
   PENDING
   APPROVED
@@ -44,19 +609,19 @@ enum BookmarkType {
 }
 
 enum StorageType {
-  SUPABASE // Files stored in Supabase Storage
-  EXTERNAL_MEGA // Files stored in MEGA
-  LOCAL // Legacy: files in local filesystem (for migration)
+  SUPABASE
+  EXTERNAL_MEGA
+  LOCAL
 }
 
 enum QuizMode {
-  RANDOM_30    // Режим 1: 30 случайных вопросов
-  BLOCK        // Режим 2: Тематический блок
+  RANDOM_30
+  BLOCK
 }
 
 enum QuestionType {
-  SINGLE    // Один правильный ответ
-  MULTIPLE  // Несколько правильных ответов
+  SINGLE
+  MULTIPLE
 }
 
 enum QuestionDifficulty {
@@ -65,704 +630,16 @@ enum QuestionDifficulty {
   HARD
 }
 
-// Models
-model User {
-  id            String     @id @default(uuid())
-  email         String     @unique
-  username      String?    @unique
-  password      String
-  fullName      String
-  academicYear  Int // 1-6
-  profileImage  String? // Path to profile image
-  status        UserStatus @default(PENDING)
-  role          UserRole   @default(USER)
-  emailVerified Boolean    @default(false) // Email verification status
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  // Relations
-  uploadedMaterials    Material[]         @relation("MaterialUploader")
-  approvedMaterials    Material[]         @relation("MaterialApprover")
-  discussionThreads    DiscussionThread[] @relation("ThreadAuthor")
-  approvedThreads      DiscussionThread[] @relation("ThreadApprover")
-  comments             Comment[]          @relation("CommentAuthor")
-  approvedComments     Comment[]          @relation("CommentApprover")
-  votes                Vote[]
-  sentMessages         Message[]          @relation("MessageSender")
-  receivedMessages     Message[]          @relation("MessageReceiver")
-  bookmarks            Bookmark[]
-  ratings              Rating[]
-  notifications        Notification[]     @relation("NotificationReceiver")
-  createdNotifications Notification[]     @relation("NotificationCreator")
-  downloads            MaterialDownload[]
-  verificationCodes    VerificationCode[]
-  announcements        Announcement[]     @relation("AnnouncementAuthor")
-  externalResources    ExternalResource[] @relation("ResourceCreator")
-  createdPolls         Poll[]             @relation("PollCreator")
-  pollVotes            PollVote[]         @relation("PollVoter")
-  teacherRatings       TeacherRating[]    @relation("UserTeacherRatings")
-  teacherReviews       TeacherReview[]    @relation("UserTeacherReviews")
-  reviewHelpful        TeacherReviewHelpful[] @relation("UserReviewHelpful")
-  quizAttempts         QuizAttempt[]      // Попытки прохождения тестов
-
-  @@index([email])
-  @@index([username])
-  @@index([status])
-  @@map("users")
-}
-
-model Subject {
-  id          String   @id @default(uuid())
-  name        String // e.g., "Анатомия"
-  slug        String   @unique // e.g., "anatomy"
-  description String?
-  order       Int      @default(0) // For sorting
-  createdAt   DateTime @default(now())
-
-  // Relations
-  materials         Material[]
-  discussionThreads DiscussionThread[]
-  teachers          TeacherSubject[]
-  quizBlocks        QuizBlock[]        // Тематические блоки тестов
-  quizQuestions     QuizQuestion[]     // Вопросы по предмету
-  quizAttempts      QuizAttempt[]      // Попытки прохождения случайных тестов
-
-  @@index([slug])
-  @@map("subjects")
-}
-
-model Material {
-  id            String        @id @default(uuid())
-  title         String
-  description   String?
-  subjectId     String
-  academicYear  Int // 1-6
-  filePath      String // Storage path (Supabase path or external identifier)
-  fileName      String // Original filename
-  fileType      FileType
-  fileSize      Int // In bytes
-  storageType   StorageType   @default(SUPABASE) // Where file is stored
-  storageBucket String? // Supabase bucket name (e.g., "materials")
-  externalUrl   String? // Direct URL for external storage (MEGA, etc.)
-  megaAccountId Int? // Which MEGA account stores this file (1, 2, 3, etc.)
-  tags          String[] // ["high-yield", "exam-relevant"]
-  status        ContentStatus @default(PENDING)
-  uploadedById  String
-  approvedById  String?
-  downloadCount Int           @default(0)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  // Relations
-  subject    Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  uploadedBy User               @relation("MaterialUploader", fields: [uploadedById], references: [id])
-  approvedBy User?              @relation("MaterialApprover", fields: [approvedById], references: [id])
-  bookmarks  Bookmark[]
-  ratings    Rating[]
-  downloads  MaterialDownload[]
-
-  @@index([subjectId])
-  @@index([academicYear])
-  @@index([status])
-  @@index([createdAt])
-  @@map("materials")
-}
-
-// Track unique downloads per user
-model MaterialDownload {
-  id           String   @id @default(uuid())
-  materialId   String
-  userId       String
-  downloadedAt DateTime @default(now())
-
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([materialId, userId]) // One record per user per material
-  @@index([materialId])
-  @@index([userId])
-  @@map("material_downloads")
-}
-
-model DiscussionThread {
-  id            String        @id @default(uuid())
-  title         String
-  content       String        @db.Text
-  subjectId     String
-  academicYear  Int // 1-6
-  authorId      String
-  status        ContentStatus @default(PENDING)
-  approvedById  String?
-  upvotes       Int           @default(0)
-  downvotes     Int           @default(0)
-  commentsCount Int           @default(0)
-  isPinned      Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  // Relations
-  subject    Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  author     User       @relation("ThreadAuthor", fields: [authorId], references: [id])
-  approvedBy User?      @relation("ThreadApprover", fields: [approvedById], references: [id])
-  comments   Comment[]
-  votes      Vote[]
-  bookmarks  Bookmark[]
-
-  @@index([subjectId])
-  @@index([academicYear])
-  @@index([status])
-  @@index([createdAt])
-  @@index([upvotes])
-  @@map("discussion_threads")
-}
-
-model Comment {
-  id           String        @id @default(uuid())
-  content      String        @db.Text
-  threadId     String
-  parentId     String? // For nested comments
-  authorId     String
-  status       ContentStatus @default(PENDING)
-  approvedById String?
-  upvotes      Int           @default(0)
-  downvotes    Int           @default(0)
-  depth        Int           @default(0) // 0 = top-level, 1 = reply, etc.
-  isPinned     Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  // Relations
-  thread     DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  parent     Comment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies    Comment[]        @relation("CommentReplies")
-  author     User             @relation("CommentAuthor", fields: [authorId], references: [id])
-  approvedBy User?            @relation("CommentApprover", fields: [approvedById], references: [id])
-  votes      Vote[]
-
-  @@index([threadId])
-  @@index([parentId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([upvotes])
-  @@map("comments")
-}
-
-model Vote {
-  id        String   @id @default(uuid())
-  userId    String
-  threadId  String?
-  commentId String?
-  type      VoteType // UPVOTE or DOWNVOTE
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  thread  DiscussionThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  comment Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, threadId])
-  @@unique([userId, commentId])
-  @@index([userId])
-  @@index([threadId])
-  @@index([commentId])
-  @@map("votes")
-}
-
-model Message {
-  id         String   @id @default(uuid())
-  content    String   @db.Text
-  senderId   String
-  receiverId String
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  // Relations
-  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([createdAt])
-  @@map("messages")
-}
-
-model Bookmark {
-  id           String       @id @default(uuid())
-  userId       String
-  type         BookmarkType
-  materialId   String?
-  discussionId String?
-  note         String?      @db.Text // Optional note for the bookmark
-  createdAt    DateTime     @default(now())
-
-  // Relations
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  material   Material?         @relation(fields: [materialId], references: [id], onDelete: Cascade)
-  discussion DiscussionThread? @relation(fields: [discussionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, materialId])
-  @@unique([userId, discussionId])
-  @@index([userId])
-  @@index([type])
-  @@index([createdAt])
-  @@map("bookmarks")
-}
-
-model Rating {
-  id         String   @id @default(uuid())
-  userId     String
-  materialId String
-  rating     Int // 1-5 stars
-  review     String?  @db.Text // Optional text review
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, materialId]) // User can only rate a material once
-  @@index([materialId])
-  @@index([rating])
-  @@index([createdAt])
-  @@map("ratings")
-}
-
 enum NotificationType {
-  MENTION // Упомянули в комментарии
-  REPLY // Ответили на комментарий
-  NEW_MESSAGE // Новое личное сообщение
-  MATERIAL_RATED // Оценили ваш материал
-}
-
-model Notification {
-  id          String           @id @default(uuid())
-  userId      String // Кому уведомление
-  type        NotificationType
-  title       String
-  message     String           @db.Text
-  link        String? // Ссылка на источник уведомления
-  isRead      Boolean          @default(false)
-  createdById String? // Кто создал уведомление (опционально)
-  createdAt   DateTime         @default(now())
-
-  // Relations
-  user      User  @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
-  createdBy User? @relation("NotificationCreator", fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([isRead])
-  @@index([createdAt])
-  @@map("notifications")
-}
-
-// Email verification codes
-model VerificationCode {
-  id        String   @id @default(uuid())
-  userId    String
-  email     String
-  code      String // 6-digit code
-  expiresAt DateTime // Code valid for 15 minutes
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([email])
-  @@index([code])
-  @@index([expiresAt])
-  @@map("verification_codes")
-}
-
-// Announcements - Admin can post announcements on the homepage
-model Announcement {
-  id        String           @id @default(cuid())
-  title     String           // Title of the announcement
-  content   String           @db.Text // Full content (supports markdown)
-  type      AnnouncementType @default(INFO) // Type: INFO, WARNING, SUCCESS, ERROR
-  priority  Int              @default(0) // Higher number = shown first
-  isActive  Boolean          @default(true) // Only active announcements are shown
-
-  // Author
-  authorId String
-  author   User   @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-
-  // Timestamps
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  expiresAt DateTime? // Optional expiration date
-
-  @@index([isActive])
-  @@index([priority])
-  @@index([createdAt])
-  @@index([authorId])
-  @@map("announcements")
+  MENTION
+  REPLY
+  NEW_MESSAGE
+  MATERIAL_RATED
 }
 
 enum AnnouncementType {
-  INFO    // Blue - general information
-  WARNING // Yellow - important notices
-  SUCCESS // Green - positive news
-  ERROR   // Red - critical alerts
-}
-
-// External Resources (e.g., Google Drive, Yandex Disk links)
-model ExternalResource {
-  id          String   @id @default(cuid())
-  title       String   // Resource title (e.g., "Лекции по анатомии")
-  description String?  @db.Text // Optional description
-  url         String   // Link to external resource (Google Drive, Yandex Disk, etc.)
-  icon        String   @default("🔗") // Emoji icon for display
-  order       Int      @default(0) // Display order (lower = shown first)
-  isActive    Boolean  @default(true) // Only active resources are shown
-
-  // Author
-  authorId String
-  author   User   @relation("ResourceCreator", fields: [authorId], references: [id], onDelete: Cascade)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive])
-  @@index([order])
-  @@index([authorId])
-  @@map("external_resources")
-}
-
-// Polls - Admin/Moderator can create polls for users to vote on
-model Poll {
-  id          String   @id @default(cuid())
-  question    String   // Poll question
-  description String?  @db.Text // Optional description
-  isActive    Boolean  @default(true) // Only active polls are shown
-  isMultiple  Boolean  @default(false) // Allow multiple choices
-  
-  // Author
-  createdById String
-  createdBy   User   @relation("PollCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  
-  // Timestamps
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  expiresAt DateTime? // Optional expiration date
-  
-  // Relations
-  options PollOption[]
-  votes   PollVote[]
-  
-  @@index([isActive])
-  @@index([createdAt])
-  @@index([createdById])
-  @@map("polls")
-}
-
-// Poll Options - Individual choices for a poll
-model PollOption {
-  id       String @id @default(cuid())
-  pollId   String
-  text     String // Option text
-  order    Int    @default(0) // Display order
-  
-  // Relations
-  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes PollVote[]
-  
-  @@index([pollId])
-  @@map("poll_options")
-}
-
-// Poll Votes - Track user votes
-model PollVote {
-  id        String   @id @default(cuid())
-  pollId    String
-  optionId  String
-  userId    String
-  createdAt DateTime @default(now())
-  
-  // Relations
-  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  user   User       @relation("PollVoter", fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([pollId, userId, optionId]) // Prevent duplicate votes for same option
-  @@index([pollId])
-  @@index([optionId])
-  @@index([userId])
-  @@map("poll_votes")
-}
-
-// Teacher - Преподаватели университета
-model Teacher {
-  id          String   @id @default(cuid())
-  fullName    String   // ФИО преподавателя
-  department  String   // Кафедра (например, "Анатомия", "Физиология")
-  position    String?  // Должность (профессор, доцент, ассистент)
-  photoUrl    String?  // URL фото преподавателя (Supabase Storage)
-  bio         String?  @db.Text // Краткая биография
-  academicDegree String? // Ученая степень
-  isActive    Boolean  @default(true) // Активен ли профиль
-  
-  // Рассчитываемые поля для производительности
-  averageRating Float   @default(0) // Средний рейтинг
-  totalRatings  Int     @default(0) // Количество оценок
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  ratings  TeacherRating[]
-  reviews  TeacherReview[]
-  subjects TeacherSubject[] // Связь многие-ко-многим с предметами
-  
-  @@index([department])
-  @@index([averageRating])
-  @@index([isActive])
-  @@map("teachers")
-}
-
-// TeacherSubject - Связь преподавателей с предметами
-model TeacherSubject {
-  id        String   @id @default(cuid())
-  teacherId String
-  subjectId String
-  createdAt DateTime @default(now())
-  
-  // Relations
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  
-  @@unique([teacherId, subjectId])
-  @@index([teacherId])
-  @@index([subjectId])
-  @@map("teacher_subjects")
-}
-
-// TeacherRating - Рейтинги преподавателей по категориям
-model TeacherRating {
-  id          String   @id @default(cuid())
-  teacherId   String
-  userId      String
-  
-  // Рейтинги по категориям (1-5 звезд)
-  knowledgeRating      Int // Знание предмета
-  teachingRating       Int // Качество преподавания
-  communicationRating  Int // Коммуникабельность
-  fairnessRating       Int // Справедливость в оценках
-  
-  overallRating Float // Общий рейтинг (среднее)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  user    User    @relation("UserTeacherRatings", fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([teacherId, userId]) // Один пользователь может оценить преподавателя только один раз
-  @@index([teacherId])
-  @@index([userId])
-  @@index([overallRating])
-  @@map("teacher_ratings")
-}
-
-// TeacherReview - Комментарии/отзывы о преподавателях
-model TeacherReview {
-  id        String        @id @default(cuid())
-  teacherId String
-  userId    String
-  content   String        @db.Text
-  isAnonymous Boolean     @default(false) // Анонимный отзыв
-  status    ContentStatus @default(PENDING) // Модерация отзывов
-  
-  // Лайки/дизлайки для полезности отзыва
-  helpfulCount   Int @default(0)
-  unhelpfulCount Int @default(0)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  teacher    Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  user       User                 @relation("UserTeacherReviews", fields: [userId], references: [id], onDelete: Cascade)
-  helpfulness TeacherReviewHelpful[]
-  
-  @@index([teacherId])
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("teacher_reviews")
-}
-
-// TeacherReviewHelpful - Отметки полезности отзывов
-model TeacherReviewHelpful {
-  id       String  @id @default(cuid())
-  reviewId String
-  userId   String
-  isHelpful Boolean // true = helpful, false = unhelpful
-  
-  createdAt DateTime @default(now())
-  
-  // Relations
-  review TeacherReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  user   User          @relation("UserReviewHelpful", fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([reviewId, userId])
-  @@index([reviewId])
-  @@index([userId])
-  @@map("teacher_review_helpful")
-}
-
-// ============================================
-// QUIZ SYSTEM - Система тестирования для ЦТ
-// ============================================
-
-// QuizBlock - Тематический блок вопросов (50-300 вопросов)
-model QuizBlock {
-  id          String   @id @default(cuid())
-  title       String   // Название блока (например, "Анатомия: Система кровообращения")
-  description String?  @db.Text // Описание блока
-  subjectId   String   // Связь с предметом
-  
-  // Метаданные
-  questionCount Int    @default(0) // Количество вопросов в блоке
-  difficulty    QuestionDifficulty @default(MEDIUM) // Сложность блока
-  isActive      Boolean @default(true) // Активен ли блок
-  orderIndex    Int     @default(0) // Порядок сортировки
-  
-  // Статистика
-  totalAttempts Int @default(0) // Сколько раз проходили
-  averageScore  Float @default(0) // Средний балл
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  questions QuizQuestion[]
-  attempts  QuizAttempt[]
-  
-  @@index([subjectId])
-  @@index([isActive])
-  @@index([difficulty])
-  @@index([orderIndex])
-  @@map("quiz_blocks")
-}
-
-// QuizQuestion - Вопрос для теста
-model QuizQuestion {
-  id          String   @id @default(cuid())
-  blockId     String?  // Принадлежность к блоку (может быть null для общего банка)
-  subjectId   String   // Предмет (для быстрого поиска)
-  
-  // Содержание вопроса
-  questionText String @db.Text // Текст вопроса
-  questionImage String? // URL изображения (если есть)
-  explanation  String? @db.Text // Объяснение правильного ответа
-  
-  // Варианты ответа (A, B, C, D, E)
-  optionA String @db.Text
-  optionB String @db.Text
-  optionC String @db.Text
-  optionD String @db.Text
-  optionE String? @db.Text // Может быть 4 или 5 вариантов
-  
-  // Правильный ответ
-  correctAnswer String // "a", "b", "c", "d", "e" или "a,b,c" для множественных
-  questionType  QuestionType @default(SINGLE) // SINGLE или MULTIPLE
-  
-  // Метаданные
-  difficulty QuestionDifficulty @default(MEDIUM)
-  isActive   Boolean @default(true)
-  tags       String[] // Теги для дополнительной фильтрации
-  
-  // Статистика использования
-  timesShown    Int @default(0) // Сколько раз показывали
-  timesCorrect  Int @default(0) // Сколько раз ответили правильно
-  timesWrong    Int @default(0) // Сколько раз ответили неправильно
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  block    QuizBlock?   @relation(fields: [blockId], references: [id], onDelete: SetNull)
-  subject  Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  answers  QuizAnswer[]
-  
-  @@index([blockId])
-  @@index([subjectId])
-  @@index([isActive])
-  @@index([difficulty])
-  @@index([correctAnswer])
-  @@map("quiz_questions")
-}
-
-// QuizAttempt - Попытка прохождения теста
-model QuizAttempt {
-  id       String   @id @default(cuid())
-  userId   String
-  mode     QuizMode // RANDOM_30 или BLOCK
-  
-  // Если режим BLOCK
-  blockId  String?  // ID блока (null для RANDOM_30)
-  
-  // Если режим RANDOM_30
-  subjectId String? // ID предмета (для случайной выборки)
-  
-  // Результаты
-  totalQuestions  Int // Всего вопросов
-  correctAnswers  Int // Правильных ответов
-  wrongAnswers    Int // Неправильных ответов
-  skippedAnswers  Int @default(0) // Пропущенных
-  score           Float // Процент правильных ответов
-  
-  // Время
-  startedAt   DateTime  @default(now())
-  completedAt DateTime? // null если не завершен
-  timeSpent   Int?      // Время в секундах
-  
-  // Состояние
-  isCompleted Boolean @default(false)
-  
-  // Relations
-  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  block   QuizBlock?   @relation(fields: [blockId], references: [id], onDelete: SetNull)
-  subject Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  answers QuizAnswer[]
-  
-  @@index([userId])
-  @@index([mode])
-  @@index([blockId])
-  @@index([subjectId])
-  @@index([isCompleted])
-  @@index([startedAt])
-  @@index([score])
-  @@map("quiz_attempts")
-}
-
-// QuizAnswer - Ответ пользователя на вопрос
-model QuizAnswer {
-  id         String   @id @default(cuid())
-  attemptId  String
-  questionId String
-  
-  // Ответ пользователя
-  userAnswer    String? // "a", "b", "c" или "a,b,c" для множественных, или null (пропущен)
-  isCorrect     Boolean
-  timeSpent     Int?    // Время на вопрос в секундах
-  
-  createdAt DateTime @default(now())
-  
-  // Relations
-  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
-  @@unique([attemptId, questionId]) // Один ответ на вопрос в попытке
-  @@index([attemptId])
-  @@index([questionId])
-  @@index([isCorrect])
-  @@map("quiz_answers")
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
 }

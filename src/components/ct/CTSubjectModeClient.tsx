@@ -90,29 +90,48 @@ export default function CTSubjectModeClient({
 
     setStartingQuick(true);
     try {
+      console.log('🚀 [CTSubjectModeClient] Starting quick test for subject:', subject.id);
+      
       const response = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'RANDOM_30', subjectId: subject.id }),
       });
 
+      console.log('📡 [CTSubjectModeClient] Response:', { status: response.status, ok: response.ok });
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ [CTSubjectModeClient] API Error:', errorData);
         throw new Error(errorData.error || 'Failed to start test');
       }
 
       const data = await response.json();
+      console.log('✅ [CTSubjectModeClient] API Response data:', data);
 
       const attemptId = data?.attemptId ?? data?.attemptID ?? data?.id ?? data?.attempt?.id;
+      console.log('🔑 [CTSubjectModeClient] Extracted attemptId:', attemptId);
+      
       if (!attemptId) {
-        console.error('Unexpected /api/quiz/start response (no attemptId):', data);
+        console.error('❌ [CTSubjectModeClient] No attemptId in response:', data);
         throw new Error('Не удалось начать тест: не получен идентификатор попытки');
       }
 
+      console.log('💾 [CTSubjectModeClient] Saving to localStorage:', `quiz_${attemptId}`);
       localStorage.setItem(`quiz_${attemptId}`, JSON.stringify({ ...data, attemptId }));
-      router.push(`/ct/take/${attemptId}`);
+      
+      const targetUrl = `/ct/take/${attemptId}`;
+      console.log('🔀 [CTSubjectModeClient] Redirecting to:', targetUrl);
+      console.log('🔀 [CTSubjectModeClient] attemptId value:', attemptId);
+      console.log('🔀 [CTSubjectModeClient] attemptId type:', typeof attemptId);
+      console.log('🔀 [CTSubjectModeClient] attemptId length:', attemptId.length);
+      
+      // Small delay to ensure localStorage is saved
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      router.push(targetUrl);
     } catch (error: any) {
-      console.error('Error starting quick test:', error);
+      console.error('💥 [CTSubjectModeClient] Error starting quick test:', error);
       toast.error(error.message || 'Не удалось начать быстрый тест');
     } finally {
       setStartingQuick(false);

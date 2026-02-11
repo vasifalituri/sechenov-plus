@@ -43,7 +43,10 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   }, []);
 
   useEffect(() => {
+    console.log('🎯 [QuizTakeClient] Component mounted with attemptId:', attemptId, 'type:', typeof attemptId);
+    
     if (!attemptId || attemptId === 'undefined' || attemptId === 'null') {
+      console.error('❌ [QuizTakeClient] Invalid attemptId:', attemptId);
       setIsLoading(false);
       setLoadError('Тест не найден: отсутствует идентификатор попытки');
       return;
@@ -56,6 +59,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   const fetchQuiz = async () => {
+    console.log('📥 [QuizTakeClient] fetchQuiz called for attemptId:', attemptId);
     setIsLoading(true);
     setLoadError(null);
 
@@ -63,10 +67,16 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       // Здесь нужно получить вопросы из состояния или localStorage
       // так как API /api/quiz/start уже вызван на предыдущей странице
       const cachedQuiz = localStorage.getItem(`quiz_${attemptId}`);
+      console.log('💾 [QuizTakeClient] localStorage check:', cachedQuiz ? 'FOUND' : 'NOT FOUND');
+      
       if (cachedQuiz) {
+        console.log('✅ [QuizTakeClient] Loading from localStorage');
         setQuiz(JSON.parse(cachedQuiz));
+        setIsLoading(false);
         return;
       }
+      
+      console.log('🌐 [QuizTakeClient] No cache, fetching from API...');
 
       // Fallback: load from server (works after refresh / opening link on another device)
       // Neon can have a short read-after-write delay (especially with pooling/replicas),

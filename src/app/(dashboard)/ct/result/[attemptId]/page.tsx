@@ -5,11 +5,13 @@ export const metadata = {
   title: 'Результаты теста - Sechenov+',
 };
 
-export default function CTResultPage({ params }: { params: { attemptId: string } }) {
+export default async function CTResultPage({ params }: { params: Promise<{ attemptId: string }> }) {
+  const { attemptId } = await params;
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <Suspense fallback={<div>Загрузка результатов...</div>}>
-        <QuizResultClient attemptId={params.attemptId} />
+        <QuizResultClient attemptId={attemptId} />
       </Suspense>
     </div>
   );
