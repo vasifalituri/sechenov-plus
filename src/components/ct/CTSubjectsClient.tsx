@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { BookOpen, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Subject {
@@ -21,6 +22,7 @@ export default function CTSubjectsClient() {
   const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     void fetchSubjects();
@@ -58,10 +60,18 @@ export default function CTSubjectsClient() {
               <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
             </CardContent>
           </Card>
-        ))}
-      </div>
+           ))}
+         </div>
+       )}
+     </div>
     );
   }
+
+  // Фильтруем предметы по поиску
+  const filteredSubjects = subjects.filter((subject) =>
+    subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    subject.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (subjects.length === 0) {
     return (
@@ -78,8 +88,33 @@ export default function CTSubjectsClient() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {subjects.map((subject) => (
+    <div className="space-y-6">
+      {/* Поле поиска */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Поиск по названию дисциплины..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 py-2 h-10"
+        />
+      </div>
+
+      {/* Результаты поиска */}
+      {filteredSubjects.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Ничего не найдено</h3>
+              <p className="text-gray-600">Попробуйте изменить запрос для поиска дисциплин.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredSubjects.map((subject) => (
         <Card
           key={subject.id}
           className="hover:shadow-lg transition-shadow cursor-pointer group"
