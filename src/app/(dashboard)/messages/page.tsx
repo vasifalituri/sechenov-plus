@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, Mail, Loader2, Search } from 'lucide-react';
+import { Send, Mail, Loader2, Search, ArrowLeft } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
 import { getStaffBadge, getStaffColorClass } from '@/lib/permissions';
@@ -171,9 +171,9 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
-      {/* Conversations List */}
-      <Card className="w-80 flex flex-col">
+    <div className="h-[calc(100vh-8rem)] flex gap-4 flex-col md:flex-row">
+      {/* Conversations List - Hidden on mobile when chat is selected */}
+      <Card className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="w-5 h-5" />
@@ -293,19 +293,26 @@ export default function MessagesPage() {
       </Card>
 
       {/* Messages Area */}
-      <Card className="flex-1 flex flex-col">
+      <Card className={`${selectedUser ? 'flex' : 'hidden md:flex'} flex-1 flex-col`}>
         {selectedUser ? (
           <>
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
-                <Link href={`/users/${selectedUser}`} className="hover:underline">
+            <CardHeader className="border-b bg-white dark:bg-gray-900 sticky top-0 z-10">
+              <CardTitle className="flex items-center gap-2 md:gap-0">
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="md:hidden mr-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  title="Вернуться к списку"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <Link href={`/users/${selectedUser}`} className="hover:underline flex-1">
                   @{selectedUser}
                 </Link>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-4 gap-4">
+            <CardContent className="flex-1 flex flex-col p-0 gap-0 bg-gray-50 dark:bg-gray-900">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-3">
+              <div className="flex-1 overflow-y-auto space-y-2 p-4">
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                     Нет сообщений. Начните общение!
@@ -319,19 +326,17 @@ export default function MessagesPage() {
                         className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-lg p-3 ${
+                          className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-2 ${
                             isOwn
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 dark:bg-gray-800'
+                              ? 'bg-green-500 text-white rounded-br-none'
+                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                           <p
-                            className={`text-xs mt-1 ${
-                              isOwn ? 'text-blue-100' : 'text-muted-foreground'
-                            }`}
+                            className={`text-xs mt-1 opacity-70`}
                           >
-                            {formatDateTime(message.createdAt)}
+                            {new Date(message.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                       </div>
@@ -340,30 +345,31 @@ export default function MessagesPage() {
                 )}
               </div>
 
-              {/* Send Message */}
-              <div className="flex gap-2">
-                <Textarea
-                  placeholder="Напишите сообщение..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  disabled={isSending}
-                  rows={2}
-                  className="resize-none"
-                />
-                <Button
-                  onClick={sendMessage}
-                  disabled={isSending || !newMessage.trim()}
-                  size="icon"
-                  className="h-auto"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+              {/* Send Message - WhatsApp Style */}
+              <div className="border-t dark:border-gray-800 p-3 bg-white dark:bg-gray-900">
+                <div className="flex gap-2 items-end">
+                  <Input
+                    placeholder="Сообщение..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    disabled={isSending}
+                    className="resize-none rounded-full border-gray-300 dark:border-gray-700"
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={isSending || !newMessage.trim()}
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex-shrink-0"
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </>
