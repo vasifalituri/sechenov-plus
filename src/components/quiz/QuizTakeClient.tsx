@@ -21,7 +21,16 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [timeSpent, setTimeSpent] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [startTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState<number>(() => {
+    // Восстанавливаем время начала из localStorage если оно есть
+    if (typeof window !== 'undefined') {
+      const savedStartTime = localStorage.getItem(`quiz_startTime_${attemptId}`);
+      if (savedStartTime) {
+        return parseInt(savedStartTime, 10);
+      }
+    }
+    return Date.now();
+  });
 
   useEffect(() => {
     // Таймер
@@ -51,6 +60,15 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       setIsLoading(false);
       setLoadError('Тест не найден: отсутствует идентификатор попытки');
       return;
+    }
+
+    // Сохраняем время начала теста если его еще нет
+    const savedStartTime = localStorage.getItem(`quiz_startTime_${attemptId}`);
+    if (!savedStartTime) {
+      const now = Date.now();
+      localStorage.setItem(`quiz_startTime_${attemptId}`, now.toString());
+      setStartTime(now);
+      console.log('✅ [QuizTakeClient] Saved start time:', now);
     }
 
     fetchQuiz();
@@ -269,6 +287,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
         localStorage.removeItem(`quiz_${attemptId}`);
         localStorage.removeItem(`quiz_answers_${attemptId}`);
         localStorage.removeItem(`quiz_flags_${attemptId}`);
+        localStorage.removeItem(`quiz_startTime_${attemptId}`);
         console.log('✅ [QuizTakeClient] Cleared quiz data from localStorage');
         toast.success('Тест завершен!');
         router.push(`/ct/result/${attemptId}`);
