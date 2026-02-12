@@ -46,9 +46,9 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
   };
 
   const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-green-50 border-green-200';
-    if (score >= 60) return 'bg-yellow-50 border-yellow-200';
-    return 'bg-red-50 border-red-200';
+    if (score >= 80) return 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-700 dark:text-green-100';
+    if (score >= 60) return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-700 dark:text-yellow-100';
+    return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-700 dark:text-red-100';
   };
 
   if (isLoading) {
@@ -153,13 +153,13 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
                         Правильно
                       </span>
                     ) : (
-                      <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded dark:bg-red-900 dark:text-red-100">
                         Неправильно
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-semibold mb-3">{question.questionText}</h3>
+                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">{question.questionText}</h3>
 
                   {question.questionImage && (
                     <img
@@ -182,15 +182,15 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
                           key={option}
                           className={`p-3 rounded-lg border-2 ${
                             isCorrectAnswer
-                              ? 'border-green-500 bg-green-50'
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-600'
                               : isUserAnswer
-                              ? 'border-red-500 bg-red-50'
-                              : 'border-gray-200 bg-gray-50'
+                              ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-600'
+                              : 'border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600'
                           }`}
                         >
                           <div className="flex items-start gap-2">
-                            <span className="font-medium">{option})</span>
-                            <span className="flex-1">{text}</span>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">{option})</span>
+                            <span className="flex-1 text-gray-900 dark:text-gray-100">{text}</span>
                             {isCorrectAnswer && (
                               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                             )}
