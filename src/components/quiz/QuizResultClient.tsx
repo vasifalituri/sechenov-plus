@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Clock, Award, ArrowLeft, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Award, ArrowLeft, RefreshCw, Lightbulb, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +16,8 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showExplanations, setShowExplanations] = useState(true);
+  const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
+  const [loadingAiAnswer, setLoadingAiAnswer] = useState<string | null>(null);
 
   useEffect(() => {
     fetchResult();
@@ -49,6 +51,53 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
     if (score >= 80) return 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-700 dark:text-green-100';
     if (score >= 60) return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-700 dark:text-yellow-100';
     return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-700 dark:text-red-100';
+  };
+
+  const getAiExplanation = async (answer: any) => {
+    const answerId = answer.id;
+    
+    // Если уже загружали, не загружаем еще раз
+    if (aiExplanations[answerId]) {
+      return;
+    }
+
+    setLoadingAiAnswer(answerId);
+    try {
+      const response = await fetch('/api/ai/explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questionText: answer.question.questionText,
+          correctAnswer: answer.question.correctAnswer,
+          userAnswer: answer.userAnswer,
+          explanation: answer.question.explanation,
+          options: {
+            A: answer.question.optionA,
+            B: answer.question.optionB,
+            C: answer.question.optionC,
+            D: answer.question.optionD,
+            E: answer.question.optionE,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI explanation');
+      }
+
+      const data = await response.json();
+      setAiExplanations(prev => ({
+        ...prev,
+        [answerId]: data.explanation
+      }));
+    } catch (error) {
+      console.error('Error getting AI explanation:', error);
+      toast.error('Не удалось получить объяснение от ИИ');
+    } finally {
+      setLoadingAiAnswer(null);
+    }
   };
 
   if (isLoading) {
@@ -217,6 +266,38 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
                       <p className="text-sm text-blue-800 dark:text-blue-200">{question.explanation}</p>
                     </div>
                   )}
+
+                  {/* AI Explanation Button and Content */}
+                  <div className="mt-4">
+                    <Button
+                      onClick={() => getAiExplanation(answer)}
+                      disabled={loadingAiAnswer === answer.id}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      {loadingAiAnswer === answer.id ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Объяснение от ИИ...
+                        </>
+                      ) : (
+                        <>
+                          <Lightbulb className="w-4 h-4" />
+                          {aiExplanations[answer.id] ? 'Объяснение от ИИ' : 'Получить объяснение от ИИ'}
+                        </>
+                      )}
+                    </Button>
+
+                    {aiExplanations[answer.id] && (
+                      <div className="mt-3 p-4 bg-purple-50 border-l-4 border-purple-500 rounded dark:bg-purple-950 dark:border-purple-600">
+                        <p className="text-sm font-medium text-purple-900 mb-2 dark:text-purple-100">
+                          🤖 Объяснение от ИИ:
+                        </p>
+                        <p className="text-sm text-purple-800 dark:text-purple-200 whitespace-pre-wrap">{aiExplanations[answer.id]}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
