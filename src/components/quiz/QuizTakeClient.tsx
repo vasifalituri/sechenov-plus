@@ -236,16 +236,23 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
 
   const handleCheckAnswer = async (questionId: string) => {
     setLoadingCheckAnswer(true);
+    console.log('📝 [handleCheckAnswer] Loading answer for question:', questionId);
     try {
       const response = await fetch(`/api/quiz/question/${questionId}`);
+      console.log('📝 [handleCheckAnswer] Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to load answer');
+        const errorText = await response.text();
+        console.error('❌ [handleCheckAnswer] Error response:', errorText);
+        throw new Error(`Failed to load answer: ${response.status}`);
       }
+      
       const data = await response.json();
+      console.log('✅ [handleCheckAnswer] Data loaded:', data);
       setCheckAnswerData(data);
       setShowCheckAnswer(true);
     } catch (error) {
-      console.error('Error checking answer:', error);
+      console.error('❌ [handleCheckAnswer] Error:', error);
       toast.error('Не удалось загрузить ответ');
     } finally {
       setLoadingCheckAnswer(false);
