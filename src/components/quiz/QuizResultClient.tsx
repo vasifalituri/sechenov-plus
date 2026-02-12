@@ -63,38 +63,20 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
 
     setLoadingAiAnswer(answerId);
     try {
-      const response = await fetch('/api/quiz/ai-explain', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          questionText: answer.question.questionText,
-          correctAnswer: answer.question.correctAnswer,
-          userAnswer: answer.userAnswer,
-          explanation: answer.question.explanation,
-          options: {
-            A: answer.question.optionA,
-            B: answer.question.optionB,
-            C: answer.question.optionC,
-            D: answer.question.optionD,
-            E: answer.question.optionE,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI explanation');
-      }
-
-      const data = await response.json();
+      // Временное решение - используем встроенное объяснение
+      const explanation = answer.question.explanation || 
+        `Правильный ответ: ${answer.question.correctAnswer}\n\n` +
+        `Вариант ${answer.question.correctAnswer}: ${answer.question[`option${answer.question.correctAnswer}`]}`;
+      
       setAiExplanations(prev => ({
         ...prev,
-        [answerId]: data.explanation
+        [answerId]: explanation
       }));
+      
+      toast.success('Объяснение загружено!');
     } catch (error) {
-      console.error('Error getting AI explanation:', error);
-      toast.error('Не удалось получить объяснение от ИИ');
+      console.error('Error getting explanation:', error);
+      toast.error('Не удалось получить объяснение');
     } finally {
       setLoadingAiAnswer(null);
     }
