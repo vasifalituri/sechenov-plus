@@ -60,10 +60,8 @@ export default function CTSubjectsClient() {
               <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
             </CardContent>
           </Card>
-           ))}
-         </div>
-       )}
-     </div>
+        ))}
+      </div>
     );
   }
 
@@ -115,35 +113,37 @@ export default function CTSubjectsClient() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSubjects.map((subject) => (
-        <Card
-          key={subject.id}
-          className="hover:shadow-lg transition-shadow cursor-pointer group"
-          onClick={() => {
-            const value = (subject.slug && subject.slug.trim()) || subject.id;
-            router.push(`/ct/${encodeURIComponent(value)}`);
-          }}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="group-hover:text-blue-600 transition-colors">{subject.name}</span>
-              <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-            </CardTitle>
-            <CardDescription>
-              {subject.description || 'Подготовка к централизованному тестированию'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Всего вопросов:</span>
-              <span className="font-semibold">{subject._count?.quizQuestions || 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Тематических блоков:</span>
-              <span className="font-semibold">{subject._count?.quizBlocks || 0}</span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            <Card
+              key={subject.id}
+              className="hover:shadow-lg transition-shadow cursor-pointer group"
+              onClick={() => {
+                const value = (subject.slug && subject.slug.trim()) || subject.id;
+                router.push(`/ct/${encodeURIComponent(value)}`);
+              }}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="group-hover:text-blue-600 transition-colors">{subject.name}</span>
+                  <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                </CardTitle>
+                <CardDescription>
+                  {subject.description || 'Подготовка к централизованному тестированию'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Всего вопросов:</span>
+                  <span className="font-semibold">{subject._count?.quizQuestions || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Тематических блоков:</span>
+                  <span className="font-semibold">{subject._count?.quizBlocks || 0}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
