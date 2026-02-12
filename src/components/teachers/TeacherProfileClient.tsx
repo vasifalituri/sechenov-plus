@@ -26,6 +26,7 @@ export default function TeacherProfileClient({
   const router = useRouter();
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviews, setReviews] = useState(teacher.reviews || []);
 
   const initials = teacher.fullName
     .split(' ')
@@ -57,10 +58,17 @@ export default function TeacherProfileClient({
     categoryAverages.fairness /= count;
   }
 
-  const handleSuccess = () => {
+  const handleSuccess = async (newReview?: any) => {
     setShowRatingForm(false);
     setShowReviewForm(false);
-    router.refresh();
+    
+    // Если пришел новый отзыв (из компонента формы), добавляем его сразу
+    if (newReview) {
+      setReviews([newReview, ...reviews]);
+    } else {
+      // Иначе перезагружаем страницу
+      router.refresh();
+    }
   };
 
   return (
@@ -214,13 +222,13 @@ export default function TeacherProfileClient({
               </div>
             )}
 
-            {teacher.reviews.length === 0 ? (
+            {reviews.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
                 Пока нет отзывов об этом преподавателе
               </p>
             ) : (
               <div className="space-y-4">
-                {teacher.reviews.map((review: any) => (
+                {reviews.map((review: any) => (
                   <TeacherReviewItem
                     key={review.id}
                     review={review}

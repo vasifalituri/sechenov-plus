@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 interface TeacherReviewFormProps {
   teacherId: string;
-  onSuccess?: () => void;
+  onSuccess?: (newReview?: any) => void;
 }
 
 export default function TeacherReviewForm({
@@ -45,12 +45,14 @@ export default function TeacherReviewForm({
         throw new Error(error.error || 'Не удалось отправить отзыв');
       }
 
+      const newReview = await response.json();
+      
       toast.success(
-        'Спасибо за ваш отзыв! Он будет опубликован после модерации.'
+        'Спасибо за ваш отзыв! Он опубликован.'
       );
       setContent('');
       setIsAnonymous(false);
-      onSuccess?.();
+      onSuccess?.(newReview);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
