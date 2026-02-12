@@ -18,7 +18,8 @@ import {
   Shield,
   Bookmark,
   Link as LinkIcon,
-  Users
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -49,6 +50,7 @@ export function MobileMenu() {
   const navItems = [
     { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
     { href: '/materials', label: 'Материалы', icon: BookOpen },
+    { href: '/ct', label: 'ЦТ', icon: GraduationCap },
     { href: '/discussions', label: 'Обсуждения', icon: MessageSquare },
     { href: '/teachers', label: 'Преподаватели', icon: Users },
     { href: '/resources', label: 'Ресурсы', icon: LinkIcon },
