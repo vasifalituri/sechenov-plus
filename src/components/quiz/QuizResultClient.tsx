@@ -63,7 +63,7 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
 
     setLoadingAiAnswer(answerId);
     try {
-      const response = await fetch('/api/quiz/explain', {
+      const response = await fetch('/api/quiz/ai-explain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
