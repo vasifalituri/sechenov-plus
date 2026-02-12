@@ -89,74 +89,84 @@ export async function POST(req: NextRequest) {
     // Сохраняем все ответы и обновляем попытку в транзакции
     const score = (correctCount / attempt.totalQuestions) * 100;
 
-    // Разделим операции на части для лучшей обработки ошибок
-    
-    // 1. Обновляем ответы
-    await Promise.all(
-      answerRecords.map(answer =>
-        prisma.quizAnswer.updateMany({
-          where: {
-            attemptId,
-            questionId: answer.questionId
-          },
-          data: {
-            userAnswer: answer.userAnswer,
-            isCorrect: answer.isCorrect,
-            timeSpent: answer.timeSpent
-          }
-        })
-      )
-    );
+    console.log(`📊 [Quiz Submit] Updating ${answerRecords.length} answers for attempt ${attemptId}`);
 
-    // 2. Обновляем попытку
-    await prisma.quizAttempt.update({
-      where: { id: attemptId },
-      data: {
-        correctAnswers: correctCount,
-        wrongAnswers: wrongCount,
-        skippedAnswers: skippedCount,
-        score,
-        timeSpent,
-        completedAt: new Date(),
-        isCompleted: true,
-      }
-    });
-
-    // 3. Обновляем статистику вопросов (только если нужно)
-    await Promise.all(
-      answerRecords
-        .filter(answer => answer.isCorrect || answer.userAnswer) // Обновляем только отвеченные
-        .map(answer =>
-          prisma.quizQuestion.update({
-            where: { id: answer.questionId },
+    try {
+      // Используем транзакцию для надежности
+      await prisma.$transaction(async (tx) => {
+        // 1. Обновляем ответы по одному (с лучшей обработкой ошибок)
+        for (const answer of answerRecords) {
+          await tx.quizAnswer.update({
+            where: {
+              attemptId_questionId: {
+                attemptId,
+                questionId: answer.questionId
+              }
+            },
             data: {
-              ...(answer.isCorrect ? { timesCorrect: { increment: 1 } } : {}),
-              ...(!answer.isCorrect && answer.userAnswer ? { timesWrong: { increment: 1 } } : {}),
+              userAnswer: answer.userAnswer,
+              isCorrect: answer.isCorrect,
+              timeSpent: answer.timeSpent
             }
-          })
-        )
-    );
+          });
+        }
 
-    // Обновляем статистику блока (если это блок)
-    if (attempt.blockId) {
-      const blockAttempts = await prisma.quizAttempt.findMany({
-        where: {
-          blockId: attempt.blockId,
-          isCompleted: true
-        },
-        select: { score: true }
-      });
+        // 2. Обновляем попытку
+        await tx.quizAttempt.update({
+          where: { id: attemptId },
+          data: {
+            correctAnswers: correctCount,
+            wrongAnswers: wrongCount,
+            skippedAnswers: skippedCount,
+            score,
+            timeSpent,
+            completedAt: new Date(),
+            isCompleted: true,
+          }
+        });
 
-      const avgScore = blockAttempts.reduce((sum, a) => sum + a.score, 0) / blockAttempts.length;
+        // 3. Обновляем статистику вопросов
+        for (const answer of answerRecords) {
+          if (answer.isCorrect || answer.userAnswer) {
+            await tx.quizQuestion.update({
+              where: { id: answer.questionId },
+              data: {
+                ...(answer.isCorrect ? { timesCorrect: { increment: 1 } } : {}),
+                ...(!answer.isCorrect && answer.userAnswer ? { timesWrong: { increment: 1 } } : {}),
+              }
+            });
+          }
+        }
 
-      await prisma.quizBlock.update({
-        where: { id: attempt.blockId },
-        data: {
-          totalAttempts: { increment: 1 },
-          averageScore: avgScore
+        // 4. Обновляем статистику блока (если это блок)
+        if (attempt.blockId) {
+          const blockAttempts = await tx.quizAttempt.findMany({
+            where: {
+              blockId: attempt.blockId,
+              isCompleted: true
+            },
+            select: { score: true }
+          });
+
+          if (blockAttempts.length > 0) {
+            const avgScore = blockAttempts.reduce((sum, a) => sum + a.score, 0) / blockAttempts.length;
+
+            await tx.quizBlock.update({
+              where: { id: attempt.blockId },
+              data: {
+                totalAttempts: { increment: 1 },
+                averageScore: avgScore
+              }
+            });
+          }
         }
       });
+    } catch (transactionError) {
+      console.error('❌ [Quiz Submit] Transaction error:', transactionError);
+      throw transactionError;
     }
+
+    console.log(`✅ [Quiz Submit] Successfully submitted attempt ${attemptId}`);
 
     // Возвращаем результаты с правильными ответами
     const results = await prisma.quizAttempt.findUnique({
