@@ -39,12 +39,16 @@ export default function TeacherReviewItem({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount);
-  const [unhelpfulCount, setUnhelpfulCount] = useState(review.unhelpfulCount);
   const [userVote, setUserVote] = useState(review.helpfulness?.[0]);
 
   const canDelete = currentUserId === review.user.id || isAdminOrModerator;
 
-  const handleVote = async (isHelpful: boolean) => {
+  const handleVote = async () => {
+    if (userVote) {
+      toast.error('Вы уже поставили лайк этому отзыву');
+      return;
+    }
+
     setIsVoting(true);
     try {
       const response = await fetch(
@@ -54,7 +58,6 @@ export default function TeacherReviewItem({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ isHelpful }),
         }
       );
 
@@ -63,35 +66,9 @@ export default function TeacherReviewItem({
         throw new Error(error.error || 'Не удалось оценить отзыв');
       }
 
-      const updatedReview = await response.json();
-
       // Обновляем локальное состояние
-      if (userVote && userVote.isHelpful !== isHelpful) {
-        // Переключение с одного на другое
-        if (isHelpful) {
-          setHelpfulCount(helpfulCount + 1);
-          setUnhelpfulCount(unhelpfulCount - 1);
-        } else {
-          setHelpfulCount(helpfulCount - 1);
-          setUnhelpfulCount(unhelpfulCount + 1);
-        }
-      } else if (userVote && userVote.isHelpful === isHelpful) {
-        // Toggle - удаляем голос
-        if (isHelpful) {
-          setHelpfulCount(helpfulCount - 1);
-        } else {
-          setUnhelpfulCount(unhelpfulCount - 1);
-        }
-        setUserVote(undefined);
-      } else {
-        // Новый голос
-        if (isHelpful) {
-          setHelpfulCount(helpfulCount + 1);
-        } else {
-          setUnhelpfulCount(unhelpfulCount + 1);
-        }
-        setUserVote({ isHelpful });
-      }
+      setHelpfulCount(helpfulCount + 1);
+      setUserVote({ isHelpful: true });
 
       toast.success('Спасибо за вашу оценку!');
     } catch (error: any) {
@@ -180,31 +157,18 @@ export default function TeacherReviewItem({
         </div>
       )}
 
-      {currentUserId && review.status === 'APPROVED' && (
+      {currentUserId && currentUserId !== review.user.id && review.status === 'APPROVED' && (
         <div className="flex items-center gap-4 pt-2 border-t">
-          <span className="text-sm text-gray-500">Полезен?</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleVote(true)}
-              disabled={isVoting}
-              className={userVote?.isHelpful ? 'text-green-600' : ''}
-            >
-              <ThumbsUp size={16} />
-              <span className="ml-1">{helpfulCount}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleVote(false)}
-              disabled={isVoting}
-              className={userVote && !userVote.isHelpful ? 'text-red-600' : ''}
-            >
-              <ThumbsDown size={16} />
-              <span className="ml-1">{unhelpfulCount}</span>
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleVote}
+            disabled={isVoting || !!userVote}
+            className={userVote?.isHelpful ? 'text-green-600' : ''}
+          >
+            <ThumbsUp size={16} />
+            <span className="ml-1">{helpfulCount}</span>
+          </Button>
         </div>
       )}
     </div>

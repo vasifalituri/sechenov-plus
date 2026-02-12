@@ -16,15 +16,8 @@ export async function POST(
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { isHelpful } = body;
-
-    if (typeof isHelpful !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Укажите isHelpful (true/false)' },
-        { status: 400 }
-      );
-    }
+    // Для новой логики нам не нужно передавать isHelpful в body
+    // Просто ставим лайк
 
     // Проверяем существование отзыва
     const review = await prisma.teacherReview.findUnique({
@@ -49,54 +42,29 @@ export async function POST(
     });
 
     if (existing) {
-      // Если оценка изменилась, обновляем
-      if (existing.isHelpful !== isHelpful) {
-        await prisma.teacherReviewHelpful.update({
-          where: { id: existing.id },
-          data: { isHelpful },
-        });
-
-        // Обновляем счетчики в отзыве
-        const delta = isHelpful ? 2 : -2; // Переключение с helpful на unhelpful или наоборот
-        await prisma.teacherReview.update({
-          where: { id: reviewId },
-          data: {
-            helpfulCount: isHelpful ? { increment: 1 } : { decrement: 1 },
-            unhelpfulCount: isHelpful ? { decrement: 1 } : { increment: 1 },
-          },
-        });
-      } else {
-        // Если оценка та же, удаляем (toggle)
-        await prisma.teacherReviewHelpful.delete({
-          where: { id: existing.id },
-        });
-
-        await prisma.teacherReview.update({
-          where: { id: reviewId },
-          data: {
-            helpfulCount: isHelpful ? { decrement: 1 } : undefined,
-            unhelpfulCount: !isHelpful ? { decrement: 1 } : undefined,
-          },
-        });
-      }
-    } else {
-      // Создаем новую оценку
-      await prisma.teacherReviewHelpful.create({
-        data: {
-          reviewId: reviewId,
-          userId: session.user.id,
-          isHelpful,
-        },
-      });
-
-      await prisma.teacherReview.update({
-        where: { id: reviewId },
-        data: {
-          helpfulCount: isHelpful ? { increment: 1 } : undefined,
-          unhelpfulCount: !isHelpful ? { increment: 1 } : undefined,
-        },
-      });
+      // Пользователь уже поставил лайк, не разрешаем еще один
+      return NextResponse.json(
+        { error: 'Вы уже поставили лайк этому отзыву' },
+        { status: 400 }
+      );
     }
+
+    // Создаем новый лайк
+    await prisma.teacherReviewHelpful.create({
+      data: {
+        reviewId: reviewId,
+        userId: session.user.id,
+        isHelpful: true,
+      },
+    });
+
+    // Увеличиваем счетчик лайков в отзыве
+    await prisma.teacherReview.update({
+      where: { id: reviewId },
+      data: {
+        helpfulCount: { increment: 1 },
+      },
+    });
 
     // Получаем обновленный отзыв
     const updatedReview = await prisma.teacherReview.findUnique({
