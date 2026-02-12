@@ -264,9 +264,9 @@ export default function QuizMainClient() {
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-lg font-semibold">{block.title}</h3>
                           <span className={`text-xs px-2 py-0.5 rounded ${
-                            block.difficulty === 'EASY' ? 'bg-green-100 text-green-600' :
-                            block.difficulty === 'HARD' ? 'bg-red-100 text-red-600' :
-                            'bg-yellow-100 text-yellow-600'
+                            block.difficulty === 'EASY' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-100' :
+                            block.difficulty === 'HARD' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-100' :
+                            'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-100'
                           }`}>
                             {block.difficulty === 'EASY' ? 'Легкий' :
                              block.difficulty === 'HARD' ? 'Сложный' : 'Средний'}
@@ -288,8 +288,8 @@ export default function QuizMainClient() {
                         </div>
 
                         {block.userAttempts.length > 0 && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-blue-900">
+                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                            <p className="text-sm text-blue-900 dark:text-blue-100">
                               🏆 Ваш лучший результат: <strong>{block.bestScore.toFixed(1)}%</strong>
                               {' '}({block.totalAttempts} попыток)
                             </p>

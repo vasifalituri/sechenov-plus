@@ -369,15 +369,15 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
                 onClick={() => handleAnswer(currentQuestion.id, option)}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:text-blue-100'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                     isSelected
-                      ? 'border-blue-500 bg-blue-500'
-                      : 'border-gray-300'
+                      ? 'border-blue-500 bg-blue-500 dark:bg-blue-600 dark:border-blue-400'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}>
                     {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
                   </div>
@@ -438,10 +438,10 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
                 onClick={() => setCurrentIndex(idx)}
                 className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all relative ${
                   isCurrent
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white dark:bg-blue-700 dark:text-white'
                     : isAnswered
-                    ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-green-100 text-green-700 border-2 border-green-300 dark:bg-green-900 dark:text-green-100 dark:border-green-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 {idx + 1}
@@ -454,17 +454,17 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
         </div>
         
         {/* Легенда */}
-        <div className="flex gap-4 mt-4 text-xs text-gray-600">
+        <div className="flex gap-4 mt-4 text-xs text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-blue-600 rounded"></div>
+            <div className="w-4 h-4 bg-blue-600 dark:bg-blue-700 rounded"></div>
             <span>Текущий</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
+            <div className="w-4 h-4 bg-green-100 border-2 border-green-300 dark:bg-green-900 dark:border-green-700 rounded"></div>
             <span>Отвечен</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-gray-100 rounded"></div>
+            <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded"></div>
             <span>Не отвечен</span>
           </div>
           <div className="flex items-center gap-1">

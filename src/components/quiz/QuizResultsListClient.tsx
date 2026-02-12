@@ -54,9 +54,9 @@ export default function QuizResultsListClient() {
   };
 
   const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-green-100';
-    if (score >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
+    if (score >= 80) return 'bg-green-100 dark:bg-green-900';
+    if (score >= 60) return 'bg-yellow-100 dark:bg-yellow-900';
+    return 'bg-red-100 dark:bg-red-900';
   };
 
   const formatDate = (dateString: string) => {
@@ -85,24 +85,24 @@ export default function QuizResultsListClient() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Всего попыток</p>
-                <p className="text-2xl font-bold">{stats.completedAttempts}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Всего попыток</p>
+                <p className="text-2xl font-bold dark:text-white">{stats.completedAttempts}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Award className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <Award className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Средний балл</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Средний балл</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {stats.averageScore.toFixed(1)}%
                 </p>
               </div>

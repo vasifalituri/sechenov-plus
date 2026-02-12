@@ -149,7 +149,7 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
                       Вопрос #{index + 1}
                     </span>
                     {isCorrect ? (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-100">
                         Правильно
                       </span>
                     ) : (
@@ -210,11 +210,11 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
                   )}
 
                   {showExplanations && question.explanation && (
-                    <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                      <p className="text-sm font-medium text-blue-900 mb-1">
+                    <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded dark:bg-blue-950 dark:border-blue-600">
+                      <p className="text-sm font-medium text-blue-900 mb-1 dark:text-blue-100">
                         💡 Объяснение:
                       </p>
-                      <p className="text-sm text-blue-800">{question.explanation}</p>
+                      <p className="text-sm text-blue-800 dark:text-blue-200">{question.explanation}</p>
                     </div>
                   )}
                 </div>
