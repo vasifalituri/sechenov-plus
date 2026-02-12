@@ -21,6 +21,7 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [timeSpent, setTimeSpent] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCheckAnswer, setShowCheckAnswer] = useState(false);
   const [startTime, setStartTime] = useState<number>(() => {
     // Восстанавливаем время начала из localStorage если оно есть
     if (typeof window !== 'undefined') {
@@ -443,7 +444,98 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
             );
           })}
         </div>
+
+       {/* Кнопка проверить ответ */}
+       {answers[currentQuestion.id] && (
+         <div className="mt-4">
+           <Button
+             onClick={() => setShowCheckAnswer(true)}
+             className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+           >
+             ✓ Проверить ответ
+           </Button>
+         </div>
+       )}
       </Card>
+
+     {/* Модальное окно проверки ответа */}
+     {showCheckAnswer && (
+       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+         <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+           <div className="p-6">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-xl font-semibold">Проверка ответа</h3>
+               <button
+                 onClick={() => setShowCheckAnswer(false)}
+                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl"
+               >
+                 ×
+               </button>
+             </div>
+
+             <div className="space-y-4">
+               <div>
+                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Вопрос:</p>
+                 <p className="font-semibold">{currentQuestion.questionText}</p>
+               </div>
+
+               <div>
+                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Ваш ответ:</p>
+                 <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-700">
+                   <span className="font-semibold text-blue-900 dark:text-blue-100">
+                     {answers[currentQuestion.id]}) {currentQuestion[`option${answers[currentQuestion.id]}`]}
+                   </span>
+                 </div>
+               </div>
+
+               <div>
+                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Правильный ответ:</p>
+                 <div className={`p-3 rounded-lg border ${
+                   answers[currentQuestion.id] === currentQuestion.correctAnswer
+                     ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-700'
+                     : 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-700'
+                 }`}>
+                   <span className={`font-semibold ${
+                     answers[currentQuestion.id] === currentQuestion.correctAnswer
+                       ? 'text-green-900 dark:text-green-100'
+                       : 'text-green-900 dark:text-green-100'
+                   }`}>
+                     {currentQuestion.correctAnswer}) {currentQuestion[`option${currentQuestion.correctAnswer}`]}
+                   </span>
+                 </div>
+               </div>
+
+               {answers[currentQuestion.id] === currentQuestion.correctAnswer ? (
+                 <div className="p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 rounded-lg">
+                   <p className="text-green-900 dark:text-green-100 font-medium">✓ Правильно!</p>
+                 </div>
+               ) : (
+                 <div className="p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg">
+                   <p className="text-red-900 dark:text-red-100 font-medium">✗ Неправильно</p>
+                 </div>
+               )}
+
+               {currentQuestion.explanation && (
+                 <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border-l-4 border-blue-500 rounded">
+                   <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                     💡 Объяснение:
+                   </p>
+                   <p className="text-sm text-blue-800 dark:text-blue-200">{currentQuestion.explanation}</p>
+                 </div>
+               )}
+
+               <Button
+                 onClick={() => setShowCheckAnswer(false)}
+                 className="w-full mt-4"
+                 variant="outline"
+               >
+                 Закрыть
+               </Button>
+             </div>
+           </div>
+         </Card>
+       </div>
+     )}
 
       {/* Навигация */}
       <div className="flex justify-between items-center">
