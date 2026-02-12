@@ -8,13 +8,19 @@ const GEMINI_MODEL = 'gemini-1.5-flash'; // Быстрая модель для �
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🤖 [AI Explain] Starting request...');
+    
     const session = await getServerSession(authOptions);
+    console.log('🤖 [AI Explain] Session:', session?.user?.id ? 'OK' : 'MISSING');
+    
     if (!session?.user?.id) {
+      console.error('❌ [AI Explain] Unauthorized - no session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🤖 [AI Explain] GEMINI_API_KEY:', GEMINI_API_KEY ? 'PRESENT' : 'MISSING');
     if (!GEMINI_API_KEY) {
-      console.error('❌ GEMINI_API_KEY not configured');
+      console.error('❌ [AI Explain] GEMINI_API_KEY not configured');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 500 }
@@ -60,10 +66,16 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
 
 Ответь на РУССКОМ языке. Будь лаконичен (2-3 абзаца максимум).`;
 
-    console.log('🤖 Calling Gemini API...');
+    console.log('🤖 [AI Explain] Calling Gemini API...');
+    console.log('🤖 [AI Explain] Question:', questionText?.substring(0, 50) + '...');
+    console.log('🤖 [AI Explain] API Key length:', GEMINI_API_KEY?.length);
 
     // Вызываем Gemini API через REST endpoint
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    console.log('🤖 [AI Explain] Gemini URL:', geminiUrl.substring(0, 80) + '...');
+    
+    console.log('🤖 [AI Explain] Sending request to Gemini...');
+    const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,16 +117,19 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
       }),
     });
 
+    console.log('🤖 [AI Explain] Response status:', response.status);
+    
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ Gemini API error:', error);
+      console.error('❌ [AI Explain] Gemini API error:', error);
       return NextResponse.json(
-        { error: 'Failed to generate explanation' },
+        { error: 'Failed to generate explanation', details: error },
         { status: response.status }
       );
     }
 
     const data = await response.json();
+    console.log('🤖 [AI Explain] Gemini response received');
     const explanation = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!explanation) {
