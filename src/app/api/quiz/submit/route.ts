@@ -14,7 +14,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { attemptId, answers, timeSpent } = body;
 
+    console.log(`📝 [Quiz Submit] Received submission - attemptId: ${attemptId}, answers count: ${answers?.length ?? 0}`);
+
     if (!attemptId || !Array.isArray(answers)) {
+      console.error('❌ [Quiz Submit] Invalid input - missing attemptId or answers');
       return NextResponse.json(
         { error: 'attemptId and answers array are required' },
         { status: 400 }
@@ -26,20 +29,27 @@ export async function POST(req: NextRequest) {
       where: { id: attemptId }
     });
 
+    console.log(`📝 [Quiz Submit] Attempt found: ${attempt ? 'YES' : 'NO'}`);
+
     if (!attempt) {
+      console.error('❌ [Quiz Submit] Attempt not found');
       return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
     }
 
     if (attempt.userId !== session.user.id) {
+      console.error('❌ [Quiz Submit] Forbidden - user mismatch');
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (attempt.isCompleted) {
+      console.error('❌ [Quiz Submit] Attempt already completed');
       return NextResponse.json(
         { error: 'Attempt already completed' },
         { status: 400 }
       );
     }
+
+    console.log(`✅ [Quiz Submit] Attempt verified - totalQuestions: ${attempt.totalQuestions}`);
 
     // Получаем правильные ответы для всех вопросов
     const questionIds = answers.map((a: any) => a.questionId);
@@ -89,14 +99,18 @@ export async function POST(req: NextRequest) {
     // Сохраняем все ответы и обновляем попытку в транзакции
     const score = (correctCount / attempt.totalQuestions) * 100;
 
+    console.log(`📊 [Quiz Submit] Score: ${correctCount}/${attempt.totalQuestions} = ${score.toFixed(2)}%`);
+
     // Разделим операции на части для лучшей обработки ошибок
     
-    // 1. Обновляем ответы
-    await Promise.all(
-      answerRecords.map(answer =>
-        prisma.quizAnswer.updateMany({
+    // 1. Обновляем ответы - обновляем по одному используя правильный где clause
+    console.log(`🔄 [Quiz Submit] Updating ${answerRecords.length} answers...`);
+    let updatedCount = 0;
+    for (const answer of answerRecords) {
+      try {
+        const result = await prisma.quizAnswer.updateMany({
           where: {
-            attemptId,
+            attemptId: attemptId,
             questionId: answer.questionId
           },
           data: {
@@ -104,11 +118,17 @@ export async function POST(req: NextRequest) {
             isCorrect: answer.isCorrect,
             timeSpent: answer.timeSpent
           }
-        })
-      )
-    );
+        });
+        updatedCount += result.count;
+      } catch (err) {
+        console.error(`❌ [Quiz Submit] Failed to update answer for question ${answer.questionId}:`, err);
+        throw err;
+      }
+    }
+    console.log(`✅ [Quiz Submit] Updated ${updatedCount} answers`);
 
     // 2. Обновляем попытку
+    console.log(`🔄 [Quiz Submit] Updating attempt...`);
     await prisma.quizAttempt.update({
       where: { id: attemptId },
       data: {
@@ -121,24 +141,30 @@ export async function POST(req: NextRequest) {
         isCompleted: true,
       }
     });
+    console.log(`✅ [Quiz Submit] Attempt updated`);
 
     // 3. Обновляем статистику вопросов (только если нужно)
+    console.log(`🔄 [Quiz Submit] Updating question statistics...`);
+    const questionsToUpdate = answerRecords.filter(answer => answer.isCorrect || answer.userAnswer);
     await Promise.all(
-      answerRecords
-        .filter(answer => answer.isCorrect || answer.userAnswer) // Обновляем только отвеченные
-        .map(answer =>
-          prisma.quizQuestion.update({
-            where: { id: answer.questionId },
-            data: {
-              ...(answer.isCorrect ? { timesCorrect: { increment: 1 } } : {}),
-              ...(!answer.isCorrect && answer.userAnswer ? { timesWrong: { increment: 1 } } : {}),
-            }
-          })
-        )
+      questionsToUpdate.map(answer =>
+        prisma.quizQuestion.update({
+          where: { id: answer.questionId },
+          data: {
+            ...(answer.isCorrect ? { timesCorrect: { increment: 1 } } : {}),
+            ...(!answer.isCorrect && answer.userAnswer ? { timesWrong: { increment: 1 } } : {}),
+          }
+        }).catch(err => {
+          console.error(`❌ [Quiz Submit] Failed to update question stats for ${answer.questionId}:`, err);
+          throw err;
+        })
+      )
     );
+    console.log(`✅ [Quiz Submit] Updated ${questionsToUpdate.length} question statistics`);
 
     // Обновляем статистику блока (если это блок)
     if (attempt.blockId) {
+      console.log(`🔄 [Quiz Submit] Updating block statistics for blockId: ${attempt.blockId}`);
       const blockAttempts = await prisma.quizAttempt.findMany({
         where: {
           blockId: attempt.blockId,
@@ -147,18 +173,22 @@ export async function POST(req: NextRequest) {
         select: { score: true }
       });
 
-      const avgScore = blockAttempts.reduce((sum, a) => sum + a.score, 0) / blockAttempts.length;
+      if (blockAttempts.length > 0) {
+        const avgScore = blockAttempts.reduce((sum, a) => sum + a.score, 0) / blockAttempts.length;
 
-      await prisma.quizBlock.update({
-        where: { id: attempt.blockId },
-        data: {
-          totalAttempts: { increment: 1 },
-          averageScore: avgScore
-        }
-      });
+        await prisma.quizBlock.update({
+          where: { id: attempt.blockId },
+          data: {
+            totalAttempts: { increment: 1 },
+            averageScore: avgScore
+          }
+        });
+        console.log(`✅ [Quiz Submit] Block statistics updated - avgScore: ${avgScore.toFixed(2)}%`);
+      }
     }
 
     // Возвращаем результаты с правильными ответами
+    console.log(`🔄 [Quiz Submit] Fetching final results...`);
     const results = await prisma.quizAttempt.findUnique({
       where: { id: attemptId },
       include: {
@@ -183,6 +213,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    console.log(`✅ [Quiz Submit] Successfully completed attempt ${attemptId} with score ${score.toFixed(2)}%`);
     return NextResponse.json(results);
   } catch (error) {
     console.error('Error submitting quiz:', error);
