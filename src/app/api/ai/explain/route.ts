@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { questionText, correctAnswer, userAnswer, explanation, options } = body;
+    const { questionText, correctAnswer, userAnswer, explanation: dbExplanation, options } = body;
 
     if (!questionText || !correctAnswer) {
       return NextResponse.json(
@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Если уже есть объяснение в БД, используем его вместо ИИ
-    if (explanation && explanation.trim()) {
+    if (dbExplanation && dbExplanation.trim()) {
       console.log('📚 Using stored explanation instead of AI');
       return NextResponse.json({
-        explanation,
+        explanation: dbExplanation,
         source: 'database'
       });
     }
