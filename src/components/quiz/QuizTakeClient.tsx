@@ -74,12 +74,25 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
         console.log('✅ [QuizTakeClient] Loading from localStorage');
         setQuiz(JSON.parse(cachedQuiz));
         
+        // Загружаем ответы из localStorage
+        const savedAnswers = localStorage.getItem(`quiz_answers_${attemptId}`);
+        if (savedAnswers) {
+          try {
+            const answersObj = JSON.parse(savedAnswers);
+            setAnswers(answersObj);
+            console.log('✅ [QuizTakeClient] Loaded saved answers:', Object.keys(answersObj).length);
+          } catch (e) {
+            console.error('Error loading answers:', e);
+          }
+        }
+        
         // Загружаем отметки из localStorage
         const savedFlags = localStorage.getItem(`quiz_flags_${attemptId}`);
         if (savedFlags) {
           try {
             const flagsArray = JSON.parse(savedFlags);
             setFlaggedQuestions(new Set(flagsArray));
+            console.log('✅ [QuizTakeClient] Loaded saved flags:', flagsArray.length);
           } catch (e) {
             console.error('Error loading flags:', e);
           }
@@ -109,12 +122,25 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
           localStorage.setItem(`quiz_${attemptId}`, JSON.stringify(data));
           setQuiz(data);
           
+          // Загружаем ответы из localStorage
+          const savedAnswers = localStorage.getItem(`quiz_answers_${attemptId}`);
+          if (savedAnswers) {
+            try {
+              const answersObj = JSON.parse(savedAnswers);
+              setAnswers(answersObj);
+              console.log('✅ [QuizTakeClient] Loaded saved answers after server fetch:', Object.keys(answersObj).length);
+            } catch (e) {
+              console.error('Error loading answers:', e);
+            }
+          }
+          
           // Загружаем отметки из localStorage
           const savedFlags = localStorage.getItem(`quiz_flags_${attemptId}`);
           if (savedFlags) {
             try {
               const flagsArray = JSON.parse(savedFlags);
               setFlaggedQuestions(new Set(flagsArray));
+              console.log('✅ [QuizTakeClient] Loaded saved flags after server fetch:', flagsArray.length);
             } catch (e) {
               console.error('Error loading flags:', e);
             }
@@ -160,10 +186,15 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   };
 
   const handleAnswer = (questionId: string, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }));
+    setAnswers(prev => {
+      const newAnswers = {
+        ...prev,
+        [questionId]: answer
+      };
+      // Сохраняем ответы в localStorage при каждом изменении
+      localStorage.setItem(`quiz_answers_${attemptId}`, JSON.stringify(newAnswers));
+      return newAnswers;
+    });
   };
 
   const toggleFlag = (questionId: string) => {
@@ -234,8 +265,11 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       });
 
       if (res.ok) {
+        // Очищаем localStorage после успешного сабмита
         localStorage.removeItem(`quiz_${attemptId}`);
-        localStorage.removeItem(`quiz_flags_${attemptId}`); // Удаляем отметки после завершения
+        localStorage.removeItem(`quiz_answers_${attemptId}`);
+        localStorage.removeItem(`quiz_flags_${attemptId}`);
+        console.log('✅ [QuizTakeClient] Cleared quiz data from localStorage');
         toast.success('Тест завершен!');
         router.push(`/ct/result/${attemptId}`);
       } else {
