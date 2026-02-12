@@ -22,6 +22,8 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
   const [timeSpent, setTimeSpent] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCheckAnswer, setShowCheckAnswer] = useState(false);
+  const [checkAnswerData, setCheckAnswerData] = useState<any>(null);
+  const [loadingCheckAnswer, setLoadingCheckAnswer] = useState(false);
   const [startTime, setStartTime] = useState<number>(() => {
     // Восстанавливаем время начала из localStorage если оно есть
     if (typeof window !== 'undefined') {
@@ -230,6 +232,24 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
       localStorage.setItem(`quiz_flags_${attemptId}`, JSON.stringify(Array.from(newSet)));
       return newSet;
     });
+  };
+
+  const handleCheckAnswer = async (questionId: string) => {
+    setLoadingCheckAnswer(true);
+    try {
+      const response = await fetch(`/api/quiz/question/${questionId}`);
+      if (!response.ok) {
+        throw new Error('Failed to load answer');
+      }
+      const data = await response.json();
+      setCheckAnswerData(data);
+      setShowCheckAnswer(true);
+    } catch (error) {
+      console.error('Error checking answer:', error);
+      toast.error('Не удалось загрузить ответ');
+    } finally {
+      setLoadingCheckAnswer(false);
+    }
   };
 
   const goToNextFlagged = () => {
@@ -449,17 +469,18 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
        {answers[currentQuestion.id] && (
          <div className="mt-4">
            <Button
-             onClick={() => setShowCheckAnswer(true)}
-             className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+             onClick={() => handleCheckAnswer(currentQuestion.id)}
+             disabled={loadingCheckAnswer}
+             className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
            >
-             ✓ Проверить ответ
+             {loadingCheckAnswer ? 'Загрузка...' : '✓ Проверить ответ'}
            </Button>
          </div>
        )}
       </Card>
 
      {/* Модальное окно проверки ответа */}
-     {showCheckAnswer && (
+     {showCheckAnswer && checkAnswerData && (
        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
          <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
            <div className="p-6">
@@ -476,14 +497,14 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
              <div className="space-y-4">
                <div>
                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Вопрос:</p>
-                 <p className="font-semibold">{currentQuestion.questionText}</p>
+                 <p className="font-semibold">{checkAnswerData.questionText}</p>
                </div>
 
                <div>
                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Ваш ответ:</p>
                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-700">
                    <span className="font-semibold text-blue-900 dark:text-blue-100">
-                     {answers[currentQuestion.id]}) {currentQuestion[`option${answers[currentQuestion.id]}`]}
+                     {answers[currentQuestion.id]}) {checkAnswerData[`option${answers[currentQuestion.id]}`]}
                    </span>
                  </div>
                </div>
@@ -491,21 +512,21 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
                <div>
                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Правильный ответ:</p>
                  <div className={`p-3 rounded-lg border ${
-                   answers[currentQuestion.id] === currentQuestion.correctAnswer
+                   answers[currentQuestion.id] === checkAnswerData.correctAnswer
                      ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-700'
                      : 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-700'
                  }`}>
                    <span className={`font-semibold ${
-                     answers[currentQuestion.id] === currentQuestion.correctAnswer
+                     answers[currentQuestion.id] === checkAnswerData.correctAnswer
                        ? 'text-green-900 dark:text-green-100'
                        : 'text-green-900 dark:text-green-100'
                    }`}>
-                     {currentQuestion.correctAnswer}) {currentQuestion[`option${currentQuestion.correctAnswer}`]}
+                     {checkAnswerData.correctAnswer}) {checkAnswerData[`option${checkAnswerData.correctAnswer}`]}
                    </span>
                  </div>
                </div>
 
-               {answers[currentQuestion.id] === currentQuestion.correctAnswer ? (
+               {answers[currentQuestion.id] === checkAnswerData.correctAnswer ? (
                  <div className="p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 rounded-lg">
                    <p className="text-green-900 dark:text-green-100 font-medium">✓ Правильно!</p>
                  </div>
@@ -515,12 +536,12 @@ export default function QuizTakeClient({ attemptId }: QuizTakeClientProps) {
                  </div>
                )}
 
-               {currentQuestion.explanation && (
+               {checkAnswerData.explanation && (
                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border-l-4 border-blue-500 rounded">
                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
                      💡 Объяснение:
                    </p>
-                   <p className="text-sm text-blue-800 dark:text-blue-200">{currentQuestion.explanation}</p>
+                   <p className="text-sm text-blue-800 dark:text-blue-200">{checkAnswerData.explanation}</p>
                  </div>
                )}
 
