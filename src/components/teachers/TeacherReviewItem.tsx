@@ -38,8 +38,10 @@ export default function TeacherReviewItem({
 }: TeacherReviewItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount);
+  const [unhelpfulCount, setUnhelpfulCount] = useState(review.unhelpfulCount);
+  const [userVote, setUserVote] = useState(review.helpfulness?.[0]);
 
-  const userVote = review.helpfulness?.[0];
   const canDelete = currentUserId === review.user.id || isAdminOrModerator;
 
   const handleVote = async (isHelpful: boolean) => {
@@ -61,8 +63,37 @@ export default function TeacherReviewItem({
         throw new Error(error.error || 'Не удалось оценить отзыв');
       }
 
+      const updatedReview = await response.json();
+
+      // Обновляем локальное состояние
+      if (userVote && userVote.isHelpful !== isHelpful) {
+        // Переключение с одного на другое
+        if (isHelpful) {
+          setHelpfulCount(helpfulCount + 1);
+          setUnhelpfulCount(unhelpfulCount - 1);
+        } else {
+          setHelpfulCount(helpfulCount - 1);
+          setUnhelpfulCount(unhelpfulCount + 1);
+        }
+      } else if (userVote && userVote.isHelpful === isHelpful) {
+        // Toggle - удаляем голос
+        if (isHelpful) {
+          setHelpfulCount(helpfulCount - 1);
+        } else {
+          setUnhelpfulCount(unhelpfulCount - 1);
+        }
+        setUserVote(undefined);
+      } else {
+        // Новый голос
+        if (isHelpful) {
+          setHelpfulCount(helpfulCount + 1);
+        } else {
+          setUnhelpfulCount(unhelpfulCount + 1);
+        }
+        setUserVote({ isHelpful });
+      }
+
       toast.success('Спасибо за вашу оценку!');
-      onUpdate?.();
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -161,7 +192,7 @@ export default function TeacherReviewItem({
               className={userVote?.isHelpful ? 'text-green-600' : ''}
             >
               <ThumbsUp size={16} />
-              <span className="ml-1">{review.helpfulCount}</span>
+              <span className="ml-1">{helpfulCount}</span>
             </Button>
             <Button
               variant="ghost"
@@ -171,7 +202,7 @@ export default function TeacherReviewItem({
               className={userVote && !userVote.isHelpful ? 'text-red-600' : ''}
             >
               <ThumbsDown size={16} />
-              <span className="ml-1">{review.unhelpfulCount}</span>
+              <span className="ml-1">{unhelpfulCount}</span>
             </Button>
           </div>
         </div>
