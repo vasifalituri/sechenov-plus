@@ -106,10 +106,12 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
 
     const data = await response.json();
     console.log('🤖 [AI Explain] Grok response received');
+    console.log('🤖 [AI Explain] Full response:', JSON.stringify(data, null, 2));
     const explanation = data.choices?.[0]?.message?.content;
 
     if (!explanation) {
       console.error('❌ No explanation in Grok response');
+      console.error('❌ Response data:', JSON.stringify(data, null, 2));
       return NextResponse.json(
         { error: 'Failed to generate explanation' },
         { status: 500 }
