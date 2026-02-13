@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const GROK_API_KEY = process.env.GROK_API_KEY;
+// Groq API для объяснений вопросов (быстрая и надежная)
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,13 +19,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🤖 [AI Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
-    console.log('🤖 [AI Explain] process.env.GROK_API_KEY:', process.env.GROK_API_KEY ? 'PRESENT' : 'MISSING');
-    console.log('🤖 [AI Explain] All env vars keys:', Object.keys(process.env).filter(k => k.includes('GROK') || k.includes('API')).join(', '));
-    
-    if (!GROK_API_KEY) {
-      console.error('❌ [AI Explain] GROK_API_KEY not configured');
-      console.error('❌ Environment check failed');
+    console.log('🤖 [AI Explain] GROQ_API_KEY:', GROQ_API_KEY ? 'PRESENT' : 'MISSING');
+    if (!GROQ_API_KEY) {
+      console.error('❌ [AI Explain] GROQ_API_KEY not configured');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 500 }
@@ -37,6 +36,15 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Если уже есть объяснение в БД, используем его вместо ИИ
+    if (dbExplanation && dbExplanation.trim()) {
+      console.log('📚 Using stored explanation instead of AI');
+      return NextResponse.json({
+        explanation: dbExplanation,
+        source: 'database'
+      });
     }
 
     // Формируем промпт для ИИ
@@ -59,31 +67,33 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
 
 Ответь на РУССКОМ языке. Будь лаконичен (2-3 абзаца максимум).`;
 
-    console.log('🤖 [AI Explain] Calling Grok API...');
+    console.log('🤖 [AI Explain] Calling Groq API...');
     console.log('🤖 [AI Explain] Question:', questionText?.substring(0, 50) + '...');
-    console.log('🤖 [AI Explain] API Key length:', GROK_API_KEY?.length);
+    console.log('🤖 [AI Explain] API Key length:', GROQ_API_KEY?.length);
 
-    // Вызываем Grok API через REST endpoint
-    const grokUrl = 'https://api.x.ai/chat/completions';
-    console.log('🤖 [AI Explain] Grok URL:', grokUrl);
-    
-    console.log('🤖 [AI Explain] Sending request to Grok...');
-    const response = await fetch(grokUrl, {
+    // Вызываем Groq API
+    console.log('🤖 [AI Explain] Sending request to Groq...');
+    const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`,
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-2',
+        model: GROQ_MODEL,
         messages: [
           {
+            role: 'system',
+            content: 'Ты преподаватель медицины, готовящий студентов к централизованному тестированию (ЦТ). Объясняй кратко и понятно на русском языке.',
+          },
+          {
             role: 'user',
-            content: prompt
+            content: prompt,
           }
         ],
         temperature: 0.7,
         max_tokens: 500,
+        top_p: 0.95,
       }),
     });
 
@@ -91,7 +101,7 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ [AI Explain] Grok API error:', error);
+      console.error('❌ [AI Explain] Groq API error:', error);
       return NextResponse.json(
         { error: 'Failed to generate explanation', details: error },
         { status: response.status }
@@ -99,13 +109,11 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     }
 
     const data = await response.json();
-    console.log('🤖 [AI Explain] Grok response received');
-    console.log('🤖 [AI Explain] Full response:', JSON.stringify(data, null, 2));
+    console.log('🤖 [AI Explain] Groq response received');
     const explanation = data.choices?.[0]?.message?.content;
 
     if (!explanation) {
-      console.error('❌ No explanation in Grok response');
-      console.error('❌ Response data:', JSON.stringify(data, null, 2));
+      console.error('❌ No explanation in Groq response');
       return NextResponse.json(
         { error: 'Failed to generate explanation' },
         { status: 500 }
@@ -115,7 +123,7 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     console.log('✅ Explanation generated successfully');
     return NextResponse.json({
       explanation,
-      source: 'grok'
+      source: 'groq'
     });
 
   } catch (error) {
