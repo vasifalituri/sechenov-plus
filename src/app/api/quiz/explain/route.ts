@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GROK_API_KEY = process.env.GROK_API_KEY;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🤖 [AI Explain] GEMINI_API_KEY:', GEMINI_API_KEY ? 'PRESENT' : 'MISSING');
-    if (!GEMINI_API_KEY) {
-      console.error('❌ [AI Explain] GEMINI_API_KEY not configured');
+    console.log('🤖 [AI Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
+    if (!GROK_API_KEY) {
+      console.error('❌ [AI Explain] GROK_API_KEY not configured');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 500 }
@@ -64,51 +64,28 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
 
 Ответь на РУССКОМ языке. Будь лаконичен (2-3 абзаца максимум).`;
 
-    console.log('🤖 [AI Explain] Calling Gemini API...');
+    console.log('🤖 [AI Explain] Calling Grok API...');
 
-    // Вызываем Gemini API через REST endpoint
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // Вызываем Grok API через REST endpoint
+    const grokUrl = 'https://api.x.ai/chat/completions';
     
-    console.log('🤖 [AI Explain] Sending request to Gemini...');
-    const response = await fetch(geminiUrl, {
+    console.log('🤖 [AI Explain] Sending request to Grok...');
+    const response = await fetch(grokUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROK_API_KEY}`,
       },
       body: JSON.stringify({
-        contents: [
+        model: 'grok-2',
+        messages: [
           {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
+            role: 'user',
+            content: prompt
           }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 500,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_ONLY_HIGH',
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_ONLY_HIGH',
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_ONLY_HIGH',
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_ONLY_HIGH',
-          },
-        ],
+        temperature: 0.7,
+        max_tokens: 500,
       }),
     });
 
@@ -116,7 +93,7 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ [AI Explain] Gemini API error:', error);
+      console.error('❌ [AI Explain] Grok API error:', error);
       return NextResponse.json(
         { error: 'Failed to generate explanation', details: error },
         { status: response.status }
@@ -124,11 +101,11 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     }
 
     const data = await response.json();
-    console.log('🤖 [AI Explain] Gemini response received');
-    const explanation = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    console.log('🤖 [AI Explain] Grok response received');
+    const explanation = data.choices?.[0]?.message?.content;
 
     if (!explanation) {
-      console.error('❌ No explanation in Gemini response');
+      console.error('❌ No explanation in Grok response');
       return NextResponse.json(
         { error: 'Failed to generate explanation' },
         { status: 500 }
@@ -138,7 +115,7 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     console.log('✅ Explanation generated successfully');
     return NextResponse.json({
       explanation,
-      source: 'gemini'
+      source: 'grok'
     });
 
   } catch (error) {
