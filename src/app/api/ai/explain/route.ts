@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-// Используем fetch для вызова Grok API (не требует установки библиотеки)
 const GROK_API_KEY = process.env.GROK_API_KEY;
 
 export async function POST(request: NextRequest) {
@@ -20,6 +19,7 @@ export async function POST(request: NextRequest) {
     console.log('🤖 [AI Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
     console.log('🤖 [AI Explain] process.env.GROK_API_KEY:', process.env.GROK_API_KEY ? 'PRESENT' : 'MISSING');
     console.log('🤖 [AI Explain] All env vars keys:', Object.keys(process.env).filter(k => k.includes('GROK') || k.includes('API')).join(', '));
+    
     if (!GROK_API_KEY) {
       console.error('❌ [AI Explain] GROK_API_KEY not configured');
       console.error('❌ Environment check failed');
@@ -38,9 +38,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Всегда используем AI для объяснений, даже если есть в БД
-    // (у нас есть Grok API теперь)
 
     // Формируем промпт для ИИ
     const prompt = `Ты преподаватель медицины, готовящий студентов к централизованному тестированию (ЦТ).
