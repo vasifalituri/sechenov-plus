@@ -63,11 +63,44 @@ export default function QuizResultClient({ attemptId }: QuizResultClientProps) {
 
     setLoadingAiAnswer(answerId);
     try {
-      // Временное решение - используем встроенное объяснение
-      const explanation = answer.question.explanation || 
-        `Правильный ответ: ${answer.question.correctAnswer}\n\n` +
-        `Вариант ${answer.question.correctAnswer}: ${answer.question[`option${answer.question.correctAnswer}`]}`;
+      const question = answer.question;
       
+      // Формируем параметры для API
+      const requestBody = {
+        questionText: question.questionText,
+        correctAnswer: question.correctAnswer,
+        userAnswer: answer.userAnswer,
+        explanation: question.explanation,
+        options: {
+          A: question.optionA,
+          B: question.optionB,
+          C: question.optionC,
+          D: question.optionD,
+          E: question.optionE,
+        }
+      };
+
+      // Вызываем API для получения объяснения от Grok
+      const res = await fetch('/api/ai/explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to get explanation');
+      }
+
+      const data = await res.json();
+      const explanation = data.explanation;
+
+      if (!explanation) {
+        throw new Error('No explanation received');
+      }
+
       setAiExplanations(prev => ({
         ...prev,
         [answerId]: explanation
