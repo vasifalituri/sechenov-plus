@@ -6,19 +6,19 @@ const GROK_API_KEY = process.env.GROK_API_KEY;
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🤖 [AI Explain] Starting request...');
+    console.log('🤖 [Quiz Explain] Starting request...');
     
     const session = await getServerSession(authOptions);
-    console.log('🤖 [AI Explain] Session:', session?.user?.id ? 'OK' : 'MISSING');
+    console.log('🤖 [Quiz Explain] Session:', session?.user?.id ? 'OK' : 'MISSING');
     
     if (!session?.user?.id) {
-      console.error('❌ [AI Explain] Unauthorized - no session');
+      console.error('❌ [Quiz Explain] Unauthorized - no session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🤖 [AI Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
+    console.log('🤖 [Quiz Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
     if (!GROK_API_KEY) {
-      console.error('❌ [AI Explain] GROK_API_KEY not configured');
+      console.error('❌ [Quiz Explain] GROK_API_KEY not configured');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 500 }
@@ -34,9 +34,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Всегда используем AI для объяснений, даже если есть в БД
-    // (у нас есть Grok API теперь)
 
     // Формируем промпт для ИИ
     const prompt = `Ты преподаватель медицины, готовящий студентов к централизованному тестированию (ЦТ).
@@ -58,12 +55,12 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
 
 Ответь на РУССКОМ языке. Будь лаконичен (2-3 абзаца максимум).`;
 
-    console.log('🤖 [AI Explain] Calling Grok API...');
+    console.log('🤖 [Quiz Explain] Calling Grok API...');
+    console.log('🤖 [Quiz Explain] Question:', questionText?.substring(0, 50) + '...');
 
-    // Вызываем Grok API через REST endpoint
     const grokUrl = 'https://api.x.ai/chat/completions';
     
-    console.log('🤖 [AI Explain] Sending request to Grok...');
+    console.log('🤖 [Quiz Explain] Sending request to Grok...');
     const response = await fetch(grokUrl, {
       method: 'POST',
       headers: {
@@ -83,11 +80,11 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
       }),
     });
 
-    console.log('🤖 [AI Explain] Response status:', response.status);
+    console.log('🤖 [Quiz Explain] Response status:', response.status);
     
     if (!response.ok) {
       const error = await response.json();
-      console.error('❌ [AI Explain] Grok API error:', error);
+      console.error('❌ [Quiz Explain] Grok API error:', error);
       return NextResponse.json(
         { error: 'Failed to generate explanation', details: error },
         { status: response.status }
@@ -95,8 +92,8 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     }
 
     const data = await response.json();
-    console.log('🤖 [AI Explain] Grok response received');
-    console.log('🤖 [AI Explain] Full response:', JSON.stringify(data, null, 2));
+    console.log('🤖 [Quiz Explain] Grok response received');
+    console.log('🤖 [Quiz Explain] Full response:', JSON.stringify(data, null, 2));
     const explanation = data.choices?.[0]?.message?.content;
 
     if (!explanation) {
@@ -115,7 +112,7 @@ ${userAnswer ? `ОТВЕТ СТУДЕНТА: ${userAnswer}` : ''}
     });
 
   } catch (error) {
-    console.error('❌ Error in explain endpoint:', error);
+    console.error('❌ Error in quiz explain endpoint:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
