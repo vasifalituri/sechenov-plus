@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🤖 [AI Explain] GROK_API_KEY:', GROK_API_KEY ? 'PRESENT' : 'MISSING');
+    console.log('🤖 [AI Explain] process.env.GROK_API_KEY:', process.env.GROK_API_KEY ? 'PRESENT' : 'MISSING');
+    console.log('🤖 [AI Explain] All env vars keys:', Object.keys(process.env).filter(k => k.includes('GROK') || k.includes('API')).join(', '));
     if (!GROK_API_KEY) {
       console.error('❌ [AI Explain] GROK_API_KEY not configured');
+      console.error('❌ Environment check failed');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 500 }
