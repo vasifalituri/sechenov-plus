@@ -318,26 +318,38 @@ export default function MessagesPage() {
                     Нет сообщений. Начните общение!
                   </div>
                 ) : (
-                  messages.map((message) => {
+                  messages.map((message, index) => {
                     const isOwn = message.senderId === session?.user?.id;
+                    const currentDate = new Date(message.createdAt).toLocaleDateString('ru-RU');
+                    const prevDate = index > 0 ? new Date(messages[index - 1].createdAt).toLocaleDateString('ru-RU') : null;
+                    const showDateSeparator = index === 0 || currentDate !== prevDate;
+
                     return (
-                      <div
-                        key={message.id}
-                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                      >
+                      <div key={message.id}>
+                        {showDateSeparator && (
+                          <div className="flex justify-center my-4">
+                            <span className="text-xs text-muted-foreground bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                              {currentDate}
+                            </span>
+                          </div>
+                        )}
                         <div
-                          className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-2 ${
-                            isOwn
-                              ? 'bg-green-500 text-white rounded-br-none'
-                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none'
-                          }`}
+                          className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                          <p
-                            className={`text-xs mt-1 opacity-70`}
+                          <div
+                            className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-2 ${
+                              isOwn
+                                ? 'bg-green-500 text-white rounded-br-none'
+                                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none'
+                            }`}
                           >
-                            {new Date(message.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                            <p
+                              className={`text-xs mt-1 opacity-70`}
+                            >
+                              {new Date(message.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     );
