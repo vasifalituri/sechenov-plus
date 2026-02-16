@@ -1,7 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+Tool call argument 'replace' pruned from message history.
 import { checkQuickTestLimit } from '@/lib/subscription-helpers';
 
 // POST /api/quiz/start - Начать прохождение теста
