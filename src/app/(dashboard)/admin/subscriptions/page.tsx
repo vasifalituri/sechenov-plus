@@ -46,6 +46,7 @@ export default function AdminSubscriptionsPage() {
       try {
         const res = await fetch('/api/admin/users/list');
         const data = await res.json();
+        console.log('Users response:', data);
         setUsers(data.data || data.users || []);
       } catch (error) {
         console.error('Error loading users:', error);
