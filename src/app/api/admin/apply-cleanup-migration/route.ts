@@ -9,6 +9,58 @@ import { prisma } from '@/lib/prisma';
  * 
  * Protected: Requires ?token=admin_secret in URL
  */
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.nextUrl.searchParams.get('token');
+    
+    if (token !== process.env.ADMIN_SECRET_TOKEN) {
+      return NextResponse.json(
+        { error: 'Unauthorized - invalid token' },
+        { status: 401 }
+      );
+    }
+
+    console.log('🧹 [Cleanup] Starting one-time migration...');
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    
+    const oldAttemptIds = await prisma.quizAttempt.findMany({
+      where: { startedAt: { lt: twoDaysAgo } },
+      select: { id: true }
+    });
+
+    if (oldAttemptIds.length === 0) {
+      return NextResponse.json({
+        message: 'No old attempts to delete',
+        deletedCount: 0,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const deletedAnswers = await prisma.quizAnswer.deleteMany({
+      where: { attemptId: { in: oldAttemptIds.map(a => a.id) } }
+    });
+
+    const deletedAttempts = await prisma.quizAttempt.deleteMany({
+      where: { startedAt: { lt: twoDaysAgo } }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'One-time cleanup completed successfully!',
+      deletedAttempts: deletedAttempts.count,
+      deletedAnswers: deletedAnswers.count,
+      cutoffDate: twoDaysAgo.toISOString(),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ [Cleanup] Error:', error);
+    return NextResponse.json(
+      { error: 'Cleanup failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get('token');
