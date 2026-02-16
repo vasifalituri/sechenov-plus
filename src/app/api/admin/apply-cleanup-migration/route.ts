@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         userId: true,
-        createdAt: true
+        startedAt: true
       }
     });
 
