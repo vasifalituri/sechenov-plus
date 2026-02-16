@@ -43,6 +43,8 @@ model User {
   teacherReviews       TeacherReview[]        @relation("UserTeacherReviews")
   verificationCodes    VerificationCode[]
   votes                Vote[]
+  subscription         Subscription?
+  payments             Payment[]
 
   @@index([email])
   @@index([username])
@@ -644,4 +646,86 @@ enum AnnouncementType {
   WARNING
   SUCCESS
   ERROR
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  planType      PlanType @default(FREE)
+  status        SubscriptionStatus @default(ACTIVE)
+  startDate     DateTime @default(now())
+  endDate       DateTime?
+  autoRenew     Boolean  @default(true)
+  paymentMethod String?
+  lastPaymentId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payments      Payment[]
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([planType])
+  @@index([status])
+  @@index([endDate])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  userId            String
+  subscriptionId    String
+  paypalOrderId     String          @unique
+  amount            Float
+  currency          String          @default("AZN")
+  status            PaymentStatus   @default(PENDING)
+  paymentMethod     String
+  description       String?
+  failureReason     String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  subscription      Subscription    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([paypalOrderId])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model SubscriptionSettings {
+  id                        String   @id @default(cuid())
+  yearlyPrice               Float    @default(20)
+  monthlyPrice              Float?
+  currency                  String   @default("AZN")
+  freeTrialDays             Int      @default(0)
+  quickTestLimit            Int      @default(1)
+  dataRetentionDays         Int      @default(2)
+  aiAnalysisEnabled         Boolean  @default(true)
+  thematicBlocksForPaidOnly Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("subscription_settings")
+}
+
+enum PlanType {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  SUSPENDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
 }

@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(subjects);
+    return NextResponse.json({ success: true, data: subjects });
   } catch (error) {
     console.error('Error fetching subjects:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch subjects' }, { status: 500 });
