@@ -55,7 +55,13 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 
     if (!subscription) return false;
 
-    return subscription.expiresAt > new Date();
+    // Check if subscription is active and not expired
+    if (subscription.status !== 'ACTIVE') return false;
+    
+    // If endDate is set and is in the past, subscription is expired
+    if (subscription.endDate && subscription.endDate < new Date()) return false;
+
+    return true;
   } catch (error) {
     console.error('Error checking subscription:', error);
     return false;
