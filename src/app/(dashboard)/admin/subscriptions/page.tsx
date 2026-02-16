@@ -24,7 +24,7 @@ export default function AdminSubscriptionsPage() {
   const [settings, setSettings] = useState<SubscriptionSettings | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
-  const [months, setMonths] = useState(12);
+  const [months, setMonths] = useState<number>(12);
   const [loading, setLoading] = useState(true);
 
   // Load settings
@@ -128,32 +128,32 @@ export default function AdminSubscriptionsPage() {
                 <label className="block text-sm font-medium mb-2">Цена в месяц (манаты)</label>
                 <Input
                   type="number"
-                  value={settings.monthlyPrice}
-                  onChange={(e) => setSettings({ ...settings, monthlyPrice: parseFloat(e.target.value) })}
+                  value={settings.monthlyPrice || 0}
+                  onChange={(e) => setSettings({ ...settings, monthlyPrice: parseFloat(e.target.value) || 0 })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Цена в год (манаты)</label>
                 <Input
                   type="number"
-                  value={settings.yearlyPrice}
-                  onChange={(e) => setSettings({ ...settings, yearlyPrice: parseFloat(e.target.value) })}
+                  value={settings.yearlyPrice || 0}
+                  onChange={(e) => setSettings({ ...settings, yearlyPrice: parseFloat(e.target.value) || 0 })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Быстрые тесты в день для бесплатных</label>
                 <Input
                   type="number"
-                  value={settings.quickTestsPerDay}
-                  onChange={(e) => setSettings({ ...settings, quickTestsPerDay: parseInt(e.target.value) })}
+                  value={settings.quickTestsPerDay || 0}
+                  onChange={(e) => setSettings({ ...settings, quickTestsPerDay: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Сохранение данных (дни)</label>
                 <Input
                   type="number"
-                  value={settings.dataRetentionDays}
-                  onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) })}
+                  value={settings.dataRetentionDays || 0}
+                  onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <Button onClick={handleUpdateSettings} className="w-full">Сохранить</Button>
@@ -188,8 +188,8 @@ export default function AdminSubscriptionsPage() {
             <label className="block text-sm font-medium mb-2">Месяцев</label>
             <Input
               type="number"
-              value={months}
-              onChange={(e) => setMonths(parseInt(e.target.value))}
+              value={months || 12}
+              onChange={(e) => setMonths(parseInt(e.target.value) || 12)}
               min="1"
             />
           </div>
