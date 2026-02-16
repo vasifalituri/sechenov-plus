@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { checkQuickTestLimit } from '@/lib/subscription-helpers';
 
 // POST /api/quiz/start - Начать прохождение теста
 export async function POST(req: NextRequest) {
@@ -15,6 +16,17 @@ export async function POST(req: NextRequest) {
     const { mode, blockId, subjectId } = body;
 
     console.log('Quiz start request:', { mode, blockId, subjectId });
+
+    // Проверка лимита быстрых тестов для бесплатных пользователей
+    if (mode === 'RANDOM_30') {
+      const canTake = await checkQuickTestLimit(session.user.id);
+      if (!canTake) {
+        return NextResponse.json(
+          { error: 'Вы исчерпали лимит быстрых тестов на сегодня. Upgrade to Premium!' },
+          { status: 429 }
+        );
+      }
+    }
 
     // Валидация режима
     if (!mode || !['RANDOM_30', 'BLOCK'].includes(mode)) {
