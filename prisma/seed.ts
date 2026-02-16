@@ -172,6 +172,32 @@ async function main() {
 
   console.log(`✅ Created ${teachers.length} sample teachers`);
 
+  // Create test users for subscription testing
+  const testUsers = [
+    { email: 'user1@test.com', name: 'Test User 1', username: 'testuser1' },
+    { email: 'user2@test.com', name: 'Test User 2', username: 'testuser2' },
+    { email: 'user3@test.com', name: 'Test User 3', username: 'testuser3' },
+  ];
+
+  const hashedTestPassword = await bcrypt.hash('password123', 10);
+
+  for (const testUser of testUsers) {
+    await prisma.user.upsert({
+      where: { email: testUser.email },
+      update: {},
+      create: {
+        email: testUser.email,
+        username: testUser.username,
+        fullName: testUser.name,
+        password: hashedTestPassword,
+        academicYear: 1,
+        status: 'APPROVED',
+        role: 'USER',
+      },
+    });
+    console.log(`✅ Created test user: ${testUser.email}`);
+  }
+
   console.log('🎉 Seeding completed!');
 }
 
