@@ -1,5 +1,43 @@
 import { prisma } from './prisma';
 
+// Get subscription settings
+export async function getSubscriptionSettings() {
+  try {
+    let settings = await prisma.subscriptionSettings.findFirst();
+    if (!settings) {
+      settings = await prisma.subscriptionSettings.create({
+        data: {
+          monthlyPrice: 2,
+          yearlyPrice: 20,
+          quickTestsPerDay: 1,
+          dataRetentionDays: 2
+        }
+      });
+    }
+    return settings;
+  } catch (error) {
+    console.error('Error getting subscription settings:', error);
+    return null;
+  }
+}
+
+// Update subscription settings
+export async function updateSubscriptionSettings(data: any) {
+  try {
+    let settings = await prisma.subscriptionSettings.findFirst();
+    if (!settings) {
+      return await prisma.subscriptionSettings.create({ data });
+    }
+    return await prisma.subscriptionSettings.update({
+      where: { id: settings.id },
+      data
+    });
+  } catch (error) {
+    console.error('Error updating subscription settings:', error);
+    return null;
+  }
+}
+
 // Check if user has active subscription (admins always have full access)
 export async function hasActiveSubscription(userId: string): Promise<boolean> {
   try {
