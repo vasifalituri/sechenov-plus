@@ -17,7 +17,7 @@ interface SubscriptionSettings {
 interface User {
   id: string;
   email: string;
-  name: string;
+  fullName: string;
 }
 
 export default function AdminSubscriptionsPage() {
@@ -180,7 +180,7 @@ export default function AdminSubscriptionsPage() {
               <option value="">Выберите пользователя</option>
               {users.map(user => (
                 <option key={user.id} value={user.id}>
-                  {user.name || user.email}
+                  {user.fullName || user.email}
                 </option>
               ))}
             </select>
