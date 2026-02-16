@@ -9,7 +9,7 @@ export async function getSubscriptionSettings() {
         data: {
           monthlyPrice: 2,
           yearlyPrice: 20,
-          quickTestsPerDay: 1,
+          quickTestLimit: 1,
           dataRetentionDays: 2
         }
       });
