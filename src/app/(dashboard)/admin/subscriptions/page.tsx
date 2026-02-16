@@ -8,10 +8,16 @@ import { toast } from 'sonner';
 
 interface SubscriptionSettings {
   id: string;
-  monthlyPrice: number;
+  monthlyPrice: number | null;
   yearlyPrice: number;
-  quickTestsPerDay: number;
+  quickTestLimit: number;
   dataRetentionDays: number;
+  currency: string;
+  freeTrialDays: number;
+  aiAnalysisEnabled: boolean;
+  thematicBlocksForPaidOnly: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface User {
@@ -31,9 +37,10 @@ export default function AdminSubscriptionsPage() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const res = await fetch('/api/subscriptions/settings');
+        const res = await fetch('/api/admin/subscription-settings');
+        if (!res.ok) throw new Error('Failed to load settings');
         const data = await res.json();
-        setSettings(data);
+        setSettings(data.settings);
       } catch (error) {
         console.error('Error loading settings:', error);
         toast.error('Ошибка при загрузке настроек');
@@ -62,16 +69,28 @@ export default function AdminSubscriptionsPage() {
     if (!settings) return;
 
     try {
-      const res = await fetch('/api/subscriptions/settings', {
+      const res = await fetch('/api/admin/subscription-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify({
+          monthlyPrice: settings.monthlyPrice,
+          yearlyPrice: settings.yearlyPrice,
+          quickTestLimit: settings.quickTestLimit,
+          dataRetentionDays: settings.dataRetentionDays,
+          currency: settings.currency,
+          freeTrialDays: settings.freeTrialDays,
+          aiAnalysisEnabled: settings.aiAnalysisEnabled,
+          thematicBlocksForPaidOnly: settings.thematicBlocksForPaidOnly,
+        })
       });
 
       if (res.ok) {
+        const data = await res.json();
+        setSettings(data.settings);
         toast.success('Настройки сохранены');
       } else {
-        toast.error('Ошибка при сохранении');
+        const error = await res.json();
+        toast.error(error.error || 'Ошибка при сохранении');
       }
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -125,39 +144,87 @@ export default function AdminSubscriptionsPage() {
         <CardContent className="space-y-4">
           {settings && (
             <>
-              <div>
-                <label className="block text-sm font-medium mb-2">Цена в месяц (манаты)</label>
-                <Input
-                  type="number"
-                  value={settings.monthlyPrice || 0}
-                  onChange={(e) => setSettings({ ...settings, monthlyPrice: parseFloat(e.target.value) || 0 })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Цена в месяц (манаты)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={settings.monthlyPrice || 0}
+                    onChange={(e) => setSettings({ ...settings, monthlyPrice: parseFloat(e.target.value) || null })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Цена в год (манаты)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={settings.yearlyPrice || 0}
+                    onChange={(e) => setSettings({ ...settings, yearlyPrice: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Цена в год (манаты)</label>
-                <Input
-                  type="number"
-                  value={settings.yearlyPrice || 0}
-                  onChange={(e) => setSettings({ ...settings, yearlyPrice: parseFloat(e.target.value) || 0 })}
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Валюта</label>
+                  <Input
+                    type="text"
+                    value={settings.currency || 'AZN'}
+                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Быстрые тесты в день (бесплатно)</label>
+                  <Input
+                    type="number"
+                    value={settings.quickTestLimit || 1}
+                    onChange={(e) => setSettings({ ...settings, quickTestLimit: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Быстрые тесты в день для бесплатных</label>
-                <Input
-                  type="number"
-                  value={settings.quickTestsPerDay || 0}
-                  onChange={(e) => setSettings({ ...settings, quickTestsPerDay: parseInt(e.target.value) || 0 })}
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Дни пробного периода</label>
+                  <Input
+                    type="number"
+                    value={settings.freeTrialDays || 0}
+                    onChange={(e) => setSettings({ ...settings, freeTrialDays: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Сохранение данных (дни)</label>
+                  <Input
+                    type="number"
+                    value={settings.dataRetentionDays || 2}
+                    onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) || 2 })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Сохранение данных (дни)</label>
-                <Input
-                  type="number"
-                  value={settings.dataRetentionDays || 0}
-                  onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) || 0 })}
-                />
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="aiEnabled"
+                    checked={settings.aiAnalysisEnabled}
+                    onChange={(e) => setSettings({ ...settings, aiAnalysisEnabled: e.target.checked })}
+                  />
+                  <label htmlFor="aiEnabled" className="text-sm font-medium">ИИ анализ включен</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="thematicBlocks"
+                    checked={settings.thematicBlocksForPaidOnly}
+                    onChange={(e) => setSettings({ ...settings, thematicBlocksForPaidOnly: e.target.checked })}
+                  />
+                  <label htmlFor="thematicBlocks" className="text-sm font-medium">Тематические блоки только для платных</label>
+                </div>
               </div>
-              <Button onClick={handleUpdateSettings} className="w-full">Сохранить</Button>
+
+              <Button onClick={handleUpdateSettings} className="w-full">Сохранить все настройки</Button>
             </>
           )}
         </CardContent>
