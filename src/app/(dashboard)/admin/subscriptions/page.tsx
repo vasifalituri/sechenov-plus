@@ -44,9 +44,9 @@ export default function AdminSubscriptionsPage() {
 
     const loadUsers = async () => {
       try {
-        const res = await fetch('/api/admin/users');
+        const res = await fetch('/api/admin/users/list');
         const data = await res.json();
-        setUsers(data.users || []);
+        setUsers(data.data || data.users || []);
       } catch (error) {
         console.error('Error loading users:', error);
         toast.error('Ошибка при загрузке пользователей');
