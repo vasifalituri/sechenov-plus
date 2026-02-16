@@ -24,13 +24,33 @@ export async function GET(request: NextRequest) {
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
     console.log('🧹 [Cron] Deleting attempts before:', twoDaysAgo.toISOString());
 
+    // Get IDs of old attempts
+    const oldAttemptIds = await prisma.quizAttempt.findMany({
+      where: {
+        startedAt: {
+          lt: twoDaysAgo
+        }
+      },
+      select: {
+        id: true
+      }
+    });
+
+    console.log(`🧹 [Cron] Found ${oldAttemptIds.length} old attempts to delete`);
+
+    if (oldAttemptIds.length === 0) {
+      return NextResponse.json({
+        message: 'No old attempts to delete',
+        deletedCount: 0,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Delete quiz answers first (foreign key constraint)
     const deletedAnswers = await prisma.quizAnswer.deleteMany({
       where: {
-        quizAttempt: {
-          startedAt: {
-            lt: twoDaysAgo
-          }
+        attemptId: {
+          in: oldAttemptIds.map(a => a.id)
         }
       }
     });
