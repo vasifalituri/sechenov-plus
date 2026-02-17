@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
           userId: session.user.id,
           isCompleted: false
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { startedAt: 'desc' }
       });
 
       return NextResponse.json(activeAttempt);
