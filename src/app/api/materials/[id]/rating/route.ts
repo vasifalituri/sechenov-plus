@@ -25,7 +25,7 @@ export async function GET(
     const totalRatings = ratings.length;
 
     // Get user's rating if authenticated
-    let userRating = null;
+    let userRating: number | null = null;
     if (session) {
       const existingRating = await prisma.rating.findUnique({
         where: {

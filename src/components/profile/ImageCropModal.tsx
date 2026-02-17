@@ -134,7 +134,7 @@ export function ImageCropModal({ isOpen, imageSrc, onClose, onCropComplete }: Im
               min={1}
               max={3}
               step={0.1}
-              onValueChange={(value) => setZoom(value[0])}
+              onValueChange={(value: number[]) => setZoom(value[0])}
               className="w-full"
             />
           </div>

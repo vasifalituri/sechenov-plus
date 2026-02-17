@@ -357,7 +357,7 @@ export function MaterialUploadForm() {
         <Label htmlFor="academicYear">Курс *</Label>
         <Select
           value={formData.academicYear.toString()}
-          onValueChange={(value) => setFormData({ ...formData, academicYear: parseInt(value) })}
+          onValueChange={(value: string) => setFormData({ ...formData, academicYear: parseInt(value) })}
           disabled={isUploading}
         >
           <SelectTrigger>

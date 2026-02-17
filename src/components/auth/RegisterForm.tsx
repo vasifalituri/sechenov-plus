@@ -333,7 +333,7 @@ export function RegisterForm() {
             <Label htmlFor="academicYear">Курс обучения</Label>
             <Select
               value={formData.academicYear}
-              onValueChange={(value) => setFormData({ ...formData, academicYear: value })}
+              onValueChange={(value: string) => setFormData({ ...formData, academicYear: value })}
               disabled={isLoading}
             >
               <SelectTrigger>
