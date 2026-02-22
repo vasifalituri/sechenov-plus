@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     let wrongCount = 0;
     let skippedCount = 0;
 
-    const answerRecords = answers.map((answer: any) => {
+    const answerRecords = answers.map((answer: any, index: number) => {
       const correctAnswer = correctAnswersMap.get(answer.questionId);
       const isSkipped = !answer.userAnswer;
       
@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
         userAnswer: answer.userAnswer || null,
         isCorrect,
         timeSpent: answer.timeSpent || null,
+        questionOrder: index,
       };
     });
 
@@ -103,29 +104,41 @@ export async function POST(req: NextRequest) {
 
     // Разделим операции на части для лучшей обработки ошибок
     
-    // 1. Обновляем ответы - обновляем по одному используя правильный где clause
-    console.log(`🔄 [Quiz Submit] Updating ${answerRecords.length} answers...`);
-    let updatedCount = 0;
+    // 1. Создаем или обновляем ответы
+    console.log(`🔄 [Quiz Submit] Creating/Updating ${answerRecords.length} answers...`);
+    let savedCount = 0;
     for (const answer of answerRecords) {
       try {
-        const result = await prisma.quizAnswer.updateMany({
+        // Используем upsert для создания или обновления
+        await prisma.quizAnswer.upsert({
           where: {
-            attemptId: attemptId,
-            questionId: answer.questionId
+            attemptId_questionId: {
+              attemptId: attemptId,
+              questionId: answer.questionId
+            }
           },
-          data: {
+          update: {
             userAnswer: answer.userAnswer,
             isCorrect: answer.isCorrect,
-            timeSpent: answer.timeSpent
+            timeSpent: answer.timeSpent,
+            questionOrder: answer.questionOrder
+          },
+          create: {
+            attemptId: attemptId,
+            questionId: answer.questionId,
+            userAnswer: answer.userAnswer,
+            isCorrect: answer.isCorrect,
+            timeSpent: answer.timeSpent,
+            questionOrder: answer.questionOrder
           }
         });
-        updatedCount += result.count;
+        savedCount++;
       } catch (err) {
-        console.error(`❌ [Quiz Submit] Failed to update answer for question ${answer.questionId}:`, err);
+        console.error(`❌ [Quiz Submit] Failed to save answer for question ${answer.questionId}:`, err);
         throw err;
       }
     }
-    console.log(`✅ [Quiz Submit] Updated ${updatedCount} answers`);
+    console.log(`✅ [Quiz Submit] Saved ${savedCount} answers`);
 
     // 2. Обновляем попытку
     console.log(`🔄 [Quiz Submit] Updating attempt...`);

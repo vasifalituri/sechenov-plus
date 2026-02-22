@@ -105,6 +105,19 @@ export async function POST(req: NextRequest) {
 
     console.log(`✅ [Quiz Start] Attempt created - id: ${attempt.id}, totalQuestions: ${attempt.totalQuestions}`);
 
+    // Создаем пустые записи об ответах для каждого вопроса
+    console.log(`🔄 [Quiz Start] Creating answer records for ${questions.length} questions...`);
+    await prisma.quizAnswer.createMany({
+      data: questions.map((q, index) => ({
+        attemptId: attempt.id,
+        questionId: q.id,
+        userAnswer: null,
+        isCorrect: false,
+        questionOrder: index
+      }))
+    });
+    console.log(`✅ [Quiz Start] Answer records created`);
+
     // Возвращаем данные для начала теста
     return NextResponse.json({
       attemptId: attempt.id,
