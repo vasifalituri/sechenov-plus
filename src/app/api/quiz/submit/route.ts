@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
     }
 
-    if (attempt.userId !== session.user.id) {
+    if (attempt.userId !== session.user.id && session.user.role !== 'ADMIN') {
       console.error('❌ [Quiz Submit] Forbidden - user mismatch');
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
