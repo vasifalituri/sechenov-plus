@@ -24,6 +24,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ✅ Проверка подписки для специальных режимов (RANDOM_30, тематические блоки с премиум контентом)
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    const now = new Date();
+    const hasActiveSubscription = 
+      subscription &&
+      subscription.status === 'ACTIVE' &&
+      subscription.endDate > now;
+
+    // Быстрые тесты (RANDOM_30) требуют подписку
+    if (mode === 'RANDOM_30' && !hasActiveSubscription) {
+      console.warn(`⚠️ [Quiz Start] User ${session.user.id} tried RANDOM_30 without active subscription`);
+      return NextResponse.json(
+        { 
+          error: 'Premium subscription required for quick tests (RANDOM_30)',
+          code: 'SUBSCRIPTION_REQUIRED'
+        },
+        { status: 403 }
+      );
+    }
+
+    // Тематические блоки - некоторые требуют подписку
+    if (mode === 'BLOCK' && blockId) {
+      const block = await prisma.quizBlock.findUnique({
+        where: { id: blockId }
+      });
+
+      // Если блок требует премиум доступ и у пользователя нет подписки
+      if (block?.requiresPremium && !hasActiveSubscription) {
+        console.warn(`⚠️ [Quiz Start] User ${session.user.id} tried premium block without subscription`);
+        return NextResponse.json(
+          { 
+            error: 'Premium subscription required for this block',
+            code: 'SUBSCRIPTION_REQUIRED'
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (hasActiveSubscription) {
+      console.log(`✅ [Quiz Start] User has active subscription`);
+    }
+
     let questions: any[] = [];
 
     if (mode === 'BLOCK') {

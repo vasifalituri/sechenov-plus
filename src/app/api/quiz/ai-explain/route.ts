@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // Groq API для объяснений вопросов (быстрая и надежная)
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -18,6 +19,29 @@ export async function POST(request: NextRequest) {
       console.error('❌ [Quiz AI Explain] Unauthorized - no session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // ✅ Проверка подписки для AI анализа
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    const now = new Date();
+    const hasActiveSubscription = 
+      subscription &&
+      subscription.status === 'ACTIVE' &&
+      subscription.endDate > now;
+
+    if (!hasActiveSubscription) {
+      console.warn(`⚠️ [Quiz AI Explain] User ${session.user.id} tried AI explanation without active subscription`);
+      return NextResponse.json(
+        { 
+          error: 'Premium subscription required for AI explanations',
+          code: 'SUBSCRIPTION_REQUIRED'
+        },
+        { status: 403 }
+      );
+    }
+    console.log(`✅ [Quiz AI Explain] User has active subscription`);
 
     console.log('🤖 [Quiz AI Explain] GROQ_API_KEY:', GROQ_API_KEY ? 'PRESENT' : 'MISSING');
     if (!GROQ_API_KEY) {

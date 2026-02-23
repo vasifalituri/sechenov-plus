@@ -472,26 +472,28 @@ model TeacherReviewHelpful {
 }
 
 model QuizBlock {
-  id            String             @id @default(cuid())
-  title         String
-  description   String?
-  subjectId     String
-  questionCount Int                @default(0)
-  difficulty    QuestionDifficulty @default(MEDIUM)
-  isActive      Boolean            @default(true)
-  orderIndex    Int                @default(0)
-  totalAttempts Int                @default(0)
-  averageScore  Float              @default(0)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  attempts      QuizAttempt[]
-  subject       Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  questions     QuizQuestion[]
+  id              String             @id @default(cuid())
+  title           String
+  description     String?
+  subjectId       String
+  questionCount   Int                @default(0)
+  difficulty      QuestionDifficulty @default(MEDIUM)
+  isActive        Boolean            @default(true)
+  orderIndex      Int                @default(0)
+  totalAttempts   Int                @default(0)
+  averageScore    Float              @default(0)
+  requiresPremium Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  attempts        QuizAttempt[]
+  subject         Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions       QuizQuestion[]
 
   @@index([subjectId])
   @@index([isActive])
   @@index([difficulty])
   @@index([orderIndex])
+  @@index([requiresPremium])
   @@map("quiz_blocks")
 }
 
@@ -649,19 +651,19 @@ enum AnnouncementType {
 }
 
 model Subscription {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  planType      PlanType @default(FREE)
+  id            String             @id @default(cuid())
+  userId        String             @unique
+  planType      PlanType           @default(FREE)
   status        SubscriptionStatus @default(ACTIVE)
-  startDate     DateTime @default(now())
+  startDate     DateTime           @default(now())
   endDate       DateTime?
-  autoRenew     Boolean  @default(true)
+  autoRenew     Boolean            @default(true)
   paymentMethod String?
   lastPaymentId String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   payments      Payment[]
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([planType])
@@ -671,20 +673,20 @@ model Subscription {
 }
 
 model Payment {
-  id                String          @id @default(cuid())
-  userId            String
-  subscriptionId    String
-  paypalOrderId     String          @unique
-  amount            Float
-  currency          String          @default("AZN")
-  status            PaymentStatus   @default(PENDING)
-  paymentMethod     String
-  description       String?
-  failureReason     String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  subscription      Subscription    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  userId         String
+  subscriptionId String
+  paypalOrderId  String        @unique
+  amount         Float
+  currency       String        @default("AZN")
+  status         PaymentStatus @default(PENDING)
+  paymentMethod  String
+  description    String?
+  failureReason  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([subscriptionId])
