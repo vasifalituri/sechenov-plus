@@ -21,6 +21,13 @@ export async function GET() {
         role: true,
         emailVerified: true,
         createdAt: true,
+        subscription: {
+          select: {
+            planType: true,
+            status: true,
+            endDate: true,
+          },
+        },
       },
     });
 

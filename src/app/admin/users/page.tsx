@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Mail, MailCheck, RefreshCw } from 'lucide-react';
+import { Check, X, Trash2, Mail, MailCheck, RefreshCw, Crown } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -80,6 +80,13 @@ export default function AdminUsersPage() {
     } catch (error) {
       console.error('Error deleting user:', error);
     }
+  };
+
+  const hasActiveSubscription = (user: any) => {
+    if (!user.subscription) return false;
+    const now = new Date();
+    const endDate = new Date(user.subscription.endDate);
+    return user.subscription.status === 'ACTIVE' && user.subscription.planType === 'PREMIUM' && endDate > now;
   };
 
   const handleChangeRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
@@ -200,6 +207,12 @@ export default function AdminUsersPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium">{user.fullName}</h4>
+                        {hasActiveSubscription(user) && (
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        )}
                         {user.emailVerified ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                             <MailCheck className="w-3 h-3 mr-1" />
