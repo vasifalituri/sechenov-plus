@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Mail, MailCheck, RefreshCw, Crown } from 'lucide-react';
+import { Check, X, Trash2, Mail, MailCheck, RefreshCw, Crown, Ban } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -87,6 +87,33 @@ export default function AdminUsersPage() {
     const now = new Date();
     const endDate = new Date(user.subscription.endDate);
     return user.subscription.status === 'ACTIVE' && user.subscription.planType === 'PREMIUM' && endDate > now;
+  };
+
+  const handleCancelSubscription = async (userId: string) => {
+    if (!confirm('Вы уверены, что хотите отменить подписку этого пользователя?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/subscriptions/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Ошибка: ${error.error}`);
+        return;
+      }
+
+      alert('Подписка успешно отменена');
+      // Перезагружаем список пользователей
+      window.location.reload();
+    } catch (error) {
+      console.error('Ошибка при отмене подписки:', error);
+      alert('Ошибка при отмене подписки');
+    }
   };
 
   const handleChangeRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
@@ -289,6 +316,18 @@ export default function AdminUsersPage() {
                         </Button>
                       )}
                     </>
+                  )}
+
+                  {hasActiveSubscription(user) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCancelSubscription(user.id)}
+                      className="text-red-600 hover:bg-red-50"
+                    >
+                      <Ban className="w-4 h-4 mr-1" />
+                      Отменить подписку
+                    </Button>
                   )}
 
                   {user.role !== 'ADMIN' && (
