@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import Script from 'next/script';
 
 interface SubscriptionSettings {
   yearlyPrice: number;
@@ -16,6 +17,7 @@ export default function PricingPage() {
   const [settings, setSettings] = useState<SubscriptionSettings | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [paypalLoading, setPaypalLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,8 +49,39 @@ export default function PricingPage() {
       return;
     }
 
-    toast.info('PayPal интеграция скоро будет доступна...');
-    // TODO: Implement PayPal checkout
+    setPaypalLoading(true);
+    try {
+      // Create PayPal order
+      const response = await fetch('/api/subscriptions/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: settings?.yearlyPrice,
+          currency: settings?.currency || 'AZN',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(`Ошибка: ${error.error}`);
+        setPaypalLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      
+      // Redirect to PayPal approval URL
+      if (data.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        toast.error('Не удалось создать заказ');
+        setPaypalLoading(false);
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error('Ошибка при создании заказа');
+      setPaypalLoading(false);
+    }
   };
 
   if (loading) {
@@ -147,10 +180,10 @@ export default function PricingPage() {
 
             <button
               onClick={handleSubscribe}
-              disabled={isSubscribed}
+              disabled={isSubscribed || paypalLoading}
               className="w-full bg-white text-blue-600 py-3 px-4 rounded-lg font-bold hover:bg-blue-50 disabled:bg-gray-400 disabled:text-white transition"
             >
-              {isSubscribed ? 'У вас есть подписка' : 'Купить подписку'}
+              {isSubscribed ? 'У вас есть подписка' : paypalLoading ? 'Загрузка...' : 'Купить подписку'}
             </button>
           </div>
         </div>
