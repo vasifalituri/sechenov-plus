@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, getStatusLabel, getStatusColor } from '@/lib/utils';
-import { Check, X, Trash2, Mail, MailCheck, RefreshCw, Crown, Ban } from 'lucide-react';
+import { Check, X, Trash2, Mail, MailCheck, RefreshCw, Crown, Gift, Ban } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -89,7 +89,55 @@ export default function AdminUsersPage() {
     return user.subscription.status === 'ACTIVE' && user.subscription.planType === 'PREMIUM' && endDate > now;
   };
 
-Tool call argument 'replace' pruned from message history.
+  const handleGrantSubscription = async (userId: string) => {
+    if (!confirm('Вы уверены, что хотите выдать премиум подписку этому пользователю на 12 месяцев?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/grant-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, months: 12 }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Подписка успешно выдана');
+        fetchUsers();
+      } else {
+        alert(data.error || 'Ошибка при выдаче подписки');
+      }
+    } catch (error) {
+      console.error('Error granting subscription:', error);
+      alert('Ошибка при выдаче подписки');
+    }
+  };
+
+  const handleCancelSubscription = async (userId: string) => {
+    if (!confirm('Вы уверены, что хотите отменить подписку этого пользователя?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/subscriptions/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Подписка успешно отменена');
+        fetchUsers();
+      } else {
+        alert(data.error || 'Ошибка при отмене подписки');
+      }
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+      alert('Ошибка при отмене подписки');
+    }
+  };
 
   const handleChangeRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
     const roleLabels = { USER: 'обычным пользователем', MODERATOR: 'модератором', ADMIN: 'администратором' };
@@ -119,44 +167,29 @@ Tool call argument 'replace' pruned from message history.
     }
   };
 
-  // Show loading
-  if (isLoading || !userRole) {
-    return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
-  }
-
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = users.filter(user => {
     if (filter === 'ALL') return true;
     return user.status === filter;
   });
 
   const stats = {
     all: users.length,
-    pending: users.filter((u) => u.status === 'PENDING').length,
-    approved: users.filter((u) => u.status === 'APPROVED').length,
-    rejected: users.filter((u) => u.status === 'REJECTED').length,
+    pending: users.filter(u => u.status === 'PENDING').length,
+    approved: users.filter(u => u.status === 'APPROVED').length,
+    rejected: users.filter(u => u.status === 'REJECTED').length,
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Управление пользователями</h2>
-          <p className="text-muted-foreground mt-2">
-            Одобряйте или отклоняйте заявки на регистрацию
-          </p>
+          <h1 className="text-3xl font-bold">Управление пользователями</h1>
+          <p className="text-muted-foreground">Последнее обновление: {formatDate(lastUpdated)}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchUsers}
-            disabled={isLoading}
-            title="Обновить список"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+        <div>
+          <Button onClick={fetchUsers} disabled={isLoading}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            {isLoading ? 'Загрузка...' : 'Обновить'}
           </Button>
         </div>
       </div>
@@ -267,7 +300,42 @@ Tool call argument 'replace' pruned from message history.
                     </>
                   )}
 
-Tool call argument 'replace' pruned from message history.
+                  {user.status === 'APPROVED' && (
+                    <>
+                      {user.role !== 'ADMIN' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleChangeRole(user.id, 'MODERATOR')}
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          ⭐ Сделать модератором
+                        </Button>
+                      )}
+
+                      {!hasActiveSubscription(user) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleGrantSubscription(user.id)}
+                          className="text-purple-600 hover:bg-purple-50"
+                        >
+                          <Gift className="w-4 h-4 mr-1" />
+                          Выдать премиум
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancelSubscription(user.id)}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <Ban className="w-4 h-4 mr-1" />
+                          Снять премиум
+                        </Button>
+                      )}
+                    </>
+                  )}
 
                   {user.role !== 'ADMIN' && (
                     <Button
