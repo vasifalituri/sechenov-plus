@@ -89,32 +89,7 @@ export default function AdminUsersPage() {
     return user.subscription.status === 'ACTIVE' && user.subscription.planType === 'PREMIUM' && endDate > now;
   };
 
-  const handleCancelSubscription = async (userId: string) => {
-    if (!confirm('Вы уверены, что хотите отменить подписку этого пользователя?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/admin/subscriptions/cancel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`Ошибка: ${error.error}`);
-        return;
-      }
-
-      alert('Подписка успешно отменена');
-      // Перезагружаем список пользователей
-      window.location.reload();
-    } catch (error) {
-      console.error('Ошибка при отмене подписки:', error);
-      alert('Ошибка при отмене подписки');
-    }
-  };
+Tool call argument 'replace' pruned from message history.
 
   const handleChangeRole = async (userId: string, newRole: 'USER' | 'MODERATOR' | 'ADMIN') => {
     const roleLabels = { USER: 'обычным пользователем', MODERATOR: 'модератором', ADMIN: 'администратором' };
@@ -292,43 +267,7 @@ export default function AdminUsersPage() {
                     </>
                   )}
 
-                  {/* Role Management (ADMIN only) */}
-                  {userRole === 'ADMIN' && user.status === 'APPROVED' && user.role !== 'ADMIN' && (
-                    <>
-                      {user.role === 'USER' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleChangeRole(user.id, 'MODERATOR')}
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                        >
-                          ⭐ Сделать модератором
-                        </Button>
-                      )}
-                      {user.role === 'MODERATOR' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleChangeRole(user.id, 'USER')}
-                          className="text-gray-600"
-                        >
-                          Снять модератора
-                        </Button>
-                      )}
-                    </>
-                  )}
-
-                  {hasActiveSubscription(user) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleCancelSubscription(user.id)}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <Ban className="w-4 h-4 mr-1" />
-                      Отменить подписку
-                    </Button>
-                  )}
+Tool call argument 'replace' pruned from message history.
 
                   {user.role !== 'ADMIN' && (
                     <Button
